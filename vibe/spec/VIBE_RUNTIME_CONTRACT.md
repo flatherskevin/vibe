@@ -1,120 +1,293 @@
 # VIBE Runtime Contract (v1.0)
 
-This document defines the REQUIRED and RECOMMENDED behaviors for any AI agent or harness that interprets `.vibe` files.
+This document defines the REQUIRED and RECOMMENDED behaviors for any AI agent or runtime that interprets `.vibe` files.
 
-Goal: Make `.vibe` programs reliable across different models (Claude, Codex, etc.) by enforcing:
-- deterministic parsing/merging
-- strict structured outputs
-- tool-truth (no imaginary side effects)
-- gated execution
-- bounded retries
-- evidence-based completion
+The goal is to make `.vibe` programs deterministic and portable across different AI models (Claude, Codex, etc.) by enforcing strict execution rules.
 
 ---
 
-## 1) Definitions
+## Core Principles
 
-- **Program**: The merged result of all imported `.vibe` files starting from `project.vibe`.
-- **PLAN phase**: Produces planning docs and `spec/plan_manifest.json`. NO repository mutations except writing planning artifacts explicitly allowed for planning output.
-- **APPLY phase**: Executes operations listed in `spec/plan_manifest.json` using tools only.
-- **Tool-truth**: If a claim depends on repository state or command output, it must be backed by tool results.
+A VIBE runtime must enforce the following principles:
 
----
-
-## 2) Deterministic Parse and Merge (REQUIRED)
-
-### 2.1 Parse rules
-The runtime MUST:
-- Parse only the restricted VIBE-Doc subset used in this repo.
-- Reject tabs, invalid indentation, and duplicate keys within the same map level.
-- Treat unknown top-level keys as an error unless explicitly configured to allow extensions.
-
-### 2.2 Import resolution
-- Imports MUST be resolved as relative paths from the importing file’s directory.
-- Imports MUST be loaded in listed order.
-- Cycles MUST be detected and rejected.
-
-### 2.3 Merge rules (normative)
-When merging modules into the program:
-- `meta`: merge keys; conflicting scalar values are an error
-- `context`: merge keys; later imports may add keys; conflicting scalars are an error
-- `tools`: merge by tool name; conflicts are an error
-- `artifacts`: merge by `path`; conflicts are an error unless `override: true` is supported and set
-- `workflow.steps`: appended in import order
-- `validation`: merge by validator `id`; conflicts are an error
+- Deterministic parsing and merging of `.vibe` files
+- Strict schema validation for structured outputs
+- Tool-truth: repository state must come from tool results
+- Two-phase execution (PLAN → APPLY)
+- Bounded retries and execution budgets
+- Evidence-based completion and logging
 
 ---
 
-## 3) Structured Outputs (REQUIRED)
+## Program Lifecycle
 
-Whenever a workflow step defines `outputs` as a JSON schema, the runtime MUST:
-- Require the model to emit an output that validates against the schema
-- Reject extra keys if `additionalProperties: false` is present
-- If invalid:
-  - apply the step retry policy (revise/abort)
-  - include validation errors back to the model (as plain text) so it can correct
+A VIBE runtime processes programs in five phases.
 
-The runtime SHOULD prefer model APIs that support strict structured outputs when available.
-
----
-
-## 4) Two-Phase Execution: PLAN → APPLY (REQUIRED)
-
-### 4.1 PLAN phase
-In PLAN phase, the runtime MUST:
-1. Parse/merge the program
-2. Produce planning artifacts under `spec/` as defined by `artifacts`
-3. Produce `spec/plan_manifest.json` that validates against:
-   - `vibe/stdlib/schemas/plan_manifest.schema.json`
-4. Validate plan manifest schema compliance before moving on
-
-In PLAN phase, the runtime MUST NOT:
-- Modify non-spec artifacts (implementation files) unless the workflow step explicitly allows it and the program intends it.
-- Claim to have changed repo state without tool calls.
-
-### 4.2 APPLY phase
-In APPLY phase, the runtime MUST:
-1. Load `spec/plan_manifest.json`
-2. Execute ONLY the operations listed in `plan_manifest.operations`
-3. Use tools for every side effect (write/patch/mkdir/delete/commands)
-4. Collect evidence from tools (results, exit codes, diffs)
-5. Run validations defined in `plan_manifest.validations` and/or `validation:` blocks
-6. Produce a final execution report
-
-The runtime MUST NOT:
-- Perform operations not listed in the manifest
-- Expand scope without regenerating the manifest (unless explicitly configured)
+1. Parse
+2. Compile
+3. Plan
+4. Apply
+5. Validate
 
 ---
 
-## 5) Tool Interface and Tool-Truth (REQUIRED)
+## Phase 1 — Parse
 
-### 5.1 Tool contracts
-For each tool:
-- validate args against `args_schema` (if present)
-- validate results against `result_schema` (if present)
-- on tool error, produce an error object matching `errors_schema` (if present)
+The runtime loads `.vibe` files starting at `project.vibe`.
 
-### 5.2 Tool-truth policy
-The runtime MUST enforce:
-- The agent may only claim a file exists, contains content, or has changed if it has read it via tools or written/patched it via tools.
-- The agent may only claim a command succeeded if it has tool evidence from `exec.run` with `exit_code: 0`.
+Requirements:
 
-If a step output includes statements about state, the runtime SHOULD attach a short list of tool evidence references in the run log.
+- Only UTF-8 files are allowed.
+- Indentation must use spaces.
+- Tabs are invalid.
+- Duplicate keys within the same block are errors.
+
+If parsing fails the runtime must return:
+
+VIBE_PARSE_ERROR
 
 ---
 
-## 6) Gates: Executable Checks (REQUIRED)
+## Phase 2 — Compile
 
-A step’s `gate` is expected to be either:
-- a JSON array of gate checks (preferred), or
-- a legacy natural-language string (discouraged)
+The runtime resolves imports and merges files into a single **Program IR** as defined in:
 
-### 6.1 Gate checks format (preferred)
-Gate checks MUST follow:
+VIBE_PROGRAM_IR.md
 
-```json
-[
-  { "type": "file_exists", "config": { "path": "spec/plan_manifest.json" } },
-  { "type": "json_schema", "config": { "instance_path": "spec/plan_manifest.json", "schema_path": "..." } }
-]
+Compile-time requirements:
+
+- Import paths must resolve.
+- Import cycles are forbidden.
+- Artifact paths must be unique.
+- Tool names must be unique.
+- Validator IDs must be unique.
+
+Compile failures must return one of:
+
+VIBE_IMPORT_NOT_FOUND  
+VIBE_IMPORT_CYCLE  
+VIBE_MERGE_CONFLICT  
+VIBE_INVALID_PROGRAM
+
+---
+
+## Phase 3 — Plan
+
+If workflow.mode is:
+
+plan_only  
+or  
+plan_and_apply
+
+the runtime must first execute the planning phase.
+
+Planning requirements:
+
+- Planning artifacts must be created under `spec/`
+- The runtime must produce `spec/plan_manifest.json`
+- The manifest must validate against the schema located at:
+
+vibe/stdlib/schemas/plan_manifest.schema.json
+
+Planning may not modify implementation files unless explicitly allowed.
+
+Planning failures must return:
+
+VIBE_PLAN_OUTPUT_INVALID  
+VIBE_PLAN_MANIFEST_MISSING  
+VIBE_PLAN_MANIFEST_INVALID
+
+---
+
+## Phase 4 — Apply
+
+If workflow.mode is `plan_and_apply`, the runtime executes the plan.
+
+Execution rules:
+
+- Only operations defined in `spec/plan_manifest.json` may modify the repository.
+- All side effects must occur through tools.
+- The runtime must reject changes outside the manifest.
+
+Allowed operation types may include:
+
+write  
+patch  
+mkdir  
+delete
+
+Apply-phase errors include:
+
+VIBE_OPERATION_NOT_PERMITTED  
+VIBE_OPERATION_FAILED  
+VIBE_NON_MANIFEST_CHANGE_ATTEMPT
+
+---
+
+## Tool Execution
+
+Tools represent the only permitted side effects.
+
+Each tool may define:
+
+args_schema  
+result_schema  
+errors_schema
+
+The runtime must:
+
+- Validate tool arguments against args_schema
+- Validate tool responses against result_schema
+- Return structured errors using errors_schema
+
+If tool validation fails the runtime must return:
+
+VIBE_TOOL_ARGS_INVALID  
+VIBE_TOOL_RESULT_INVALID
+
+If a tool execution fails:
+
+VIBE_TOOL_FAILURE
+
+---
+
+## Tool-Truth Policy
+
+AI agents must not invent repository state.
+
+The runtime must enforce:
+
+- File existence claims must come from filesystem tools
+- File contents must come from fs.read
+- Command success must come from exec.run results
+
+Claims without tool evidence must be rejected.
+
+---
+
+## Gates
+
+Workflow steps may include gate checks.
+
+Gate checks must be executable and machine-verifiable.
+
+Supported gate types include:
+
+file_exists  
+file_tree  
+json_schema  
+content_rules  
+command_success  
+diff_budget
+
+Example gate logic:
+
+- ensure a file exists
+- ensure JSON matches schema
+- ensure tests exit with code 0
+- ensure patch size stays under diff budget
+
+If gates fail the runtime must return:
+
+VIBE_GATE_FAILURE
+
+---
+
+## Retry Policy
+
+Each step defines retry behavior.
+
+retry.max defines the maximum retries.
+
+retry.on_fail may be:
+
+revise  
+abort
+
+Runtime requirements:
+
+- Maximum attempts = retry.max + 1
+- Steps must never loop indefinitely
+
+If budgets are exceeded:
+
+VIBE_BUDGET_EXCEEDED
+
+---
+
+## Validation Phase
+
+After APPLY, the runtime runs validators defined in the program.
+
+Typical validators include:
+
+- file_tree
+- json_schema
+- content_rules
+- command
+
+Validators must produce pass/fail results.
+
+If any validator fails:
+
+VIBE_VALIDATION_FAILURE
+
+---
+
+## Execution Logging
+
+The runtime should produce a compact run log.
+
+Recommended file:
+
+spec/runlog_compacted.md
+
+Each step entry should include:
+
+- step id
+- attempt number
+- tool calls performed
+- files changed
+- gate results
+- remaining tasks
+
+Example entry:
+
+Step: plan_manifest  
+Attempt: 1  
+Tools: fs.write(spec/plan_manifest.json)  
+Files Changed: spec/plan_manifest.json  
+Gate Result: PASS
+
+---
+
+## Security Requirements
+
+Runtimes must enforce repository safety.
+
+Required protections:
+
+- Absolute paths are forbidden
+- Path traversal ("..") is forbidden
+- Writes must respect repo_write_scope rules
+- Network access should be disabled unless explicitly allowed
+
+High-risk commands such as destructive shell operations should be blocked unless explicitly permitted.
+
+---
+
+## Completion Criteria
+
+A VIBE program execution is considered successful only if:
+
+- The plan manifest exists and validates
+- All manifest operations execute successfully
+- All gates pass
+- All validators pass
+
+The runtime should return a final execution report summarizing:
+
+- steps executed
+- operations applied
+- validations run
+- evidence of success
