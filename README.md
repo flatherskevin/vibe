@@ -81,6 +81,10 @@ The manifest lists every change that will occur.
 
 No uncontrolled modifications are allowed.
 
+The manifest is validated against the schema located at:
+
+    vibe/stdlib/schemas/plan_manifest.schema.json
+
 ---
 
 ## Phase 2 — APPLY
@@ -222,6 +226,24 @@ If validation fails, the run fails.
 
 ---
 
+# Runtime Logs
+
+Runtimes should generate a compact execution log at:
+
+    spec/runlog_compacted.md
+
+This file records:
+
+- steps executed
+- tool calls
+- files modified
+- gate results
+- remaining tasks
+
+This allows VIBE runs to be **auditable and reproducible**.
+
+---
+
 # Security Model
 
 VIBE runtimes enforce repository safety.
@@ -270,6 +292,31 @@ Example write scope:
 
 ---
 
+# Quick Start
+
+1. Create a new repository.
+
+2. Add a root `project.vibe` file.
+
+3. Import the standard library modules:
+
+    imports:
+      - vibe/stdlib/tools_strict.vibe
+      - vibe/programs/plans_then_build_strict.vibe
+
+4. Provide a problem description in `context`.
+
+5. Run a VIBE-compatible AI agent.
+
+The agent will:
+
+- generate planning docs
+- generate a plan manifest
+- apply the changes
+- validate results
+
+---
+
 # Example Prompt for an AI Agent
 
 Example system prompt:
@@ -283,6 +330,34 @@ Example system prompt:
     5. Apply operations listed in the manifest
     6. Validate results
     7. Produce spec/runlog_compacted.md
+
+---
+
+# Syntax Highlighting
+
+This repository includes a **VS Code syntax highlighter for `.vibe` files**.
+
+The extension files are located at the **root of the repository**.
+
+To run the syntax highlighter locally:
+
+1. Open the repository in VS Code.
+
+2. Press:
+
+    F5
+
+3. VS Code will launch an **Extension Development Host** window.
+
+4. Open any `.vibe` file to see syntax highlighting.
+
+Highlighted features include:
+
+- VIBE sections
+- keys
+- imports
+- block scalars
+- embedded JSON schemas
 
 ---
 
@@ -316,7 +391,11 @@ Important documents include:
 - VIBE_PROGRAM_IR.md
 - VIBE_SCOPE.md
 - VIBE_ERRORS.md
+- VIBE_STEP_TYPES.md
+- VIBE_DEPENDENCIES.md
+- VIBE_AUTHORING_GUIDE.md
 - VIBE_REFERENCE_PROGRAM.md
+- VIBE_INDEX.md
 
 ---
 
