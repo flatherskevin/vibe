@@ -1,0 +1,37 @@
+vibe: 1.0
+
+validation:
+  - id: file_tree
+    type: file_tree
+    config: |
+      {
+        "description": "Ensure required artifacts exist"
+      }
+
+  - id: no_todos
+    type: content_rules
+    config: |
+      {
+        "forbidden_patterns": ["TODO", "FIXME"]
+      }
+
+  - id: lint
+    type: command
+    config: |
+      {
+        "cmd": "npm run lint"
+      }
+
+  - id: tests
+    type: command
+    config: |
+      {
+        "cmd": "npm test"
+      }
+
+  - id: build
+    type: command
+    config: |
+      {
+        "cmd": "npm run build"
+      }
