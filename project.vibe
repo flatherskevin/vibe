@@ -1,0 +1,24 @@
+# FILE: project.vibe
+vibe: 1.0
+
+meta:
+  name: vibe_program_root
+  description: Root VIBE program. Generates planning docs, then executes build workflow.
+  repo_root: .
+
+imports:
+  - vibe/stdlib/tools.vibe
+  - vibe/stdlib/validators.vibe
+  - vibe/programs/plans_then_build.vibe
+
+context:
+  problem: |
+    Describe the user’s high-level goal here.
+    Example: "Create a TypeScript CLI tool that..."
+  constraints: |
+    - Must be deterministic and tool-driven.
+    - Must generate planning docs under spec/
+    - Must not write implementation files until planning docs exist.
+  glossary: |
+    - VIBE: AI-first planning+execution language.
+    - Artifact: A repo file or directory with invariants.
