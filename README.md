@@ -425,14 +425,6 @@ Possible future improvements include:
 
 ---
 
-# License
-
-Choose any license appropriate for your project.
-
-MIT is recommended for open AI tooling.
-
----
-
 # Contributing
 
 Contributions are welcome.
