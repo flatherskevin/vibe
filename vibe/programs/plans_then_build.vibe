@@ -1,0 +1,139 @@
+vibe: 1.0
+
+artifacts:
+  - path: spec/00_overview.md
+    kind: markdown
+    source:
+      generate: |
+        Write a high level overview of the project.
+
+        Include:
+        - Problem statement
+        - Intended users
+        - Success criteria
+    invariants:
+      - Must include "Problem"
+      - Must include "Success Criteria"
+    ownership: generated
+
+  - path: spec/10_architecture.md
+    kind: markdown
+    source:
+      generate: |
+        Describe the architecture.
+
+        Include:
+        - Components
+        - Responsibilities
+        - Interfaces
+    ownership: generated
+
+  - path: spec/20_artifacts.json
+    kind: json
+    source:
+      generate: |
+        Produce the authoritative artifact manifest.
+
+        Each entry must include:
+        - path
+        - type
+        - description
+    ownership: generated
+
+  - path: spec/30_workflow.json
+    kind: json
+    source:
+      generate: |
+        Produce a workflow specification describing build steps.
+
+        Each step must include:
+        - id
+        - description
+        - inputs
+        - outputs
+    ownership: generated
+
+  - path: spec/50_acceptance.md
+    kind: markdown
+    source:
+      generate: |
+        Write acceptance criteria for the project.
+
+        Include:
+        - Functional requirements
+        - Non-functional requirements
+    ownership: generated
+
+
+workflow:
+  mode: plan_and_apply
+
+  steps:
+    - id: generate_planning_docs
+      goal: Create planning documents under spec/
+      inputs:
+        - context
+        - meta
+        - artifacts
+      outputs: |
+        {
+          "type": "object",
+          "properties": {
+            "files_created": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "required": ["files_created"]
+        }
+      gate: |
+        All artifacts under spec/ must exist.
+      retry:
+        max: 2
+        on_fail: revise
+      tools_allowed:
+        - fs.write
+
+    - id: verify_planning_docs
+      goal: Ensure planning docs meet invariants
+      inputs:
+        - spec/00_overview.md
+        - spec/10_architecture.md
+        - spec/20_artifacts.json
+        - spec/30_workflow.json
+      outputs: |
+        {
+          "type": "object",
+          "properties": {
+            "valid": { "type": "boolean" }
+          },
+          "required": ["valid"]
+        }
+      gate: |
+        Must return valid: true
+      retry:
+        max: 1
+        on_fail: revise
+
+    - id: build_repo
+      goal: Build repository implementation based on planning docs
+      inputs:
+        - spec/20_artifacts.json
+        - spec/30_workflow.json
+      outputs: |
+        {
+          "type": "object",
+          "properties": {
+            "result": { "type": "string" }
+          },
+          "required": ["result"]
+        }
+      gate: |
+        Validators must pass.
+      retry:
+        max: 1
+        on_fail: abort
+      tools_allowed:
+        - fs.write
+        - fs.apply_patch
+        - exec.run
