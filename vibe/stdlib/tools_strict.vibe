@@ -1,0 +1,169 @@
+vibe: 1.0
+
+# Strict tool contracts: args + result + errors schemas.
+# Runtimes SHOULD validate tool calls and tool results.
+
+tools:
+  fs.read:
+    schema: |
+      {
+        "args_schema": {
+          "type": "object",
+          "properties": { "path": { "type": "string" } },
+          "required": ["path"],
+          "additionalProperties": false
+        },
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "content": { "type": "string" }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false
+        },
+        "errors_schema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"],
+          "additionalProperties": false
+        }
+      }
+
+  fs.list:
+    schema: |
+      {
+        "args_schema": {
+          "type": "object",
+          "properties": { "path": { "type": "string" } },
+          "required": ["path"],
+          "additionalProperties": false
+        },
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string", "enum": ["file", "dir"] }
+                },
+                "required": ["name", "type"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["path", "entries"],
+          "additionalProperties": false
+        },
+        "errors_schema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"],
+          "additionalProperties": false
+        }
+      }
+
+  fs.write:
+    schema: |
+      {
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "content": { "type": "string" }
+          },
+          "required": ["path", "content"],
+          "additionalProperties": false
+        },
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "bytes_written": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["path", "bytes_written"],
+          "additionalProperties": false
+        },
+        "errors_schema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"],
+          "additionalProperties": false
+        }
+      }
+
+  fs.apply_patch:
+    schema: |
+      {
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "patch": { "type": "string" }
+          },
+          "required": ["path", "patch"],
+          "additionalProperties": false
+        },
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "applied": { "type": "boolean" }
+          },
+          "required": ["path", "applied"],
+          "additionalProperties": false
+        },
+        "errors_schema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"],
+          "additionalProperties": false
+        }
+      }
+
+  exec.run:
+    schema: |
+      {
+        "args_schema": {
+          "type": "object",
+          "properties": { "cmd": { "type": "string" } },
+          "required": ["cmd"],
+          "additionalProperties": false
+        },
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "cmd": { "type": "string" },
+            "exit_code": { "type": "integer" },
+            "stdout": { "type": "string" },
+            "stderr": { "type": "string" }
+          },
+          "required": ["cmd", "exit_code", "stdout", "stderr"],
+          "additionalProperties": false
+        },
+        "errors_schema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"],
+          "additionalProperties": false
+        }
+      }
