@@ -1,24 +1,47 @@
-# FILE: project.vibe
 vibe: 1.0
 
 meta:
   name: vibe_program_root
-  description: Root VIBE program. Generates planning docs, then executes build workflow.
+  description: Root VIBE program. Generates planning docs, then executes a strict plan manifest.
   repo_root: .
 
 imports:
   - vibe/stdlib/tools.vibe
   - vibe/stdlib/validators.vibe
   - vibe/programs/plans_then_build.vibe
+  - vibe/programs/plans_then_build_strict.vibe
 
 context:
   problem: |
     Describe the user’s high-level goal here.
-    Example: "Create a TypeScript CLI tool that..."
   constraints: |
     - Must be deterministic and tool-driven.
     - Must generate planning docs under spec/
-    - Must not write implementation files until planning docs exist.
+    - Must generate spec/plan_manifest.json before applying changes.
+    - Must prefer patches over full overwrites when possible.
   glossary: |
     - VIBE: AI-first planning+execution language.
     - Artifact: A repo file or directory with invariants.
+    - Plan Manifest: A strict JSON file that lists all operations to apply.
+
+workflow:
+  mode: plan_and_apply
+  steps:
+    - id: entrypoint
+      goal: Delegate to imported workflows (planning + strict manifest + apply)
+      inputs:
+        - imports
+      outputs: |
+        {
+          "type": "object",
+          "properties": { "ok": { "type": "boolean" } },
+          "required": ["ok"],
+          "additionalProperties": false
+        }
+      gate: |
+        [
+          { "type": "file_exists", "config": { "path": "spec/plan_manifest.json" } }
+        ]
+      retry:
+        max: 1
+        on_fail: abort
