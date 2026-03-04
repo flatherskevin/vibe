@@ -1,0 +1,144 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "VIBE",
+  "scopeName": "source.vibe",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#versionLine" },
+    { "include": "#topLevelKeys" },
+    { "include": "#keys" },
+    { "include": "#numbers" },
+    { "include": "#booleans" },
+    { "include": "#strings" },
+    { "include": "#paths" },
+    { "include": "#listItems" },
+    { "include": "#blockScalars" },
+    { "include": "#jsonBlocks" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.vibe",
+          "match": "#.*$"
+        }
+      ]
+    },
+
+    "versionLine": {
+      "patterns": [
+        {
+          "name": "meta.version.vibe",
+          "match": "^\\s*(vibe)\\s*:\\s*(1\\.0)\\s*$",
+          "captures": {
+            "1": { "name": "keyword.other.version.vibe" },
+            "2": { "name": "constant.numeric.version.vibe" }
+          }
+        }
+      ]
+    },
+
+    "topLevelKeys": {
+      "patterns": [
+        {
+          "name": "keyword.control.section.vibe",
+          "match": "^\\s*(meta|imports|context|tools|artifacts|workflow|validation)\\s*:\\s*$",
+          "captures": {
+            "1": { "name": "keyword.control.section.vibe" }
+          }
+        }
+      ]
+    },
+
+    "keys": {
+      "patterns": [
+        {
+          "name": "meta.key.vibe",
+          "match": "^\\s*([A-Za-z_][A-Za-z0-9_\\-]*)\\s*:(?=\\s|$)",
+          "captures": {
+            "1": { "name": "entity.name.tag.vibe" }
+          }
+        }
+      ]
+    },
+
+    "listItems": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.list.begin.vibe",
+          "match": "^\\s*-(?=\\s)"
+        }
+      ]
+    },
+
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.vibe",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.vibe",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.vibe",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.vibe", "match": "\\\\." }
+          ]
+        }
+      ]
+    },
+
+    "paths": {
+      "patterns": [
+        {
+          "name": "string.unquoted.path.vibe",
+          "match": "\\b([A-Za-z0-9._\\-/]+\\.vibe|[A-Za-z0-9._\\-/]+\\.(md|json|ts|js|txt|yml|yaml))\\b"
+        }
+      ]
+    },
+
+    "blockScalars": {
+      "patterns": [
+        {
+          "name": "keyword.operator.block.vibe",
+          "match": "^\\s*([A-Za-z_][A-Za-z0-9_\\-]*)\\s*:\\s*\\|\\s*$",
+          "captures": {
+            "1": { "name": "entity.name.tag.vibe" }
+          }
+        }
+      ]
+    },
+
+    "jsonBlocks": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.json.vibe",
+          "begin": "^\\s*(schema|outputs|config|gate)\\s*:\\s*\\|\\s*$",
+          "beginCaptures": {
+            "1": { "name": "entity.name.tag.vibe" }
+          },
+          "end": "^(?=\\s*[^\\s].*:\\s*|\\s*-\\s+|\\s*$)",
+          "patterns": [
+            {
+              "include": "source.json"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
