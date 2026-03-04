@@ -1,0 +1,85 @@
+vibe: 1.0
+
+tools:
+  fs.read:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" }
+        },
+        "required": ["path"]
+      }
+    notes: |
+      Reads a file from the repository.
+
+  fs.write:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" }
+        },
+        "required": ["path", "content"]
+      }
+    notes: |
+      Writes a file. Overwrites if it exists.
+
+  fs.apply_patch:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "patch": { "type": "string" }
+        },
+        "required": ["path", "patch"]
+      }
+    notes: |
+      Applies a unified diff patch to a file.
+
+  fs.list:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" }
+        },
+        "required": ["path"]
+      }
+    notes: |
+      Lists directory contents.
+
+  exec.run:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "cmd": { "type": "string" }
+        },
+        "required": ["cmd"]
+      }
+    notes: |
+      Runs a shell command.
+
+  git.status:
+    schema: |
+      {
+        "type": "object",
+        "properties": {}
+      }
+    notes: |
+      Returns git status.
+
+  git.commit:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        },
+        "required": ["message"]
+      }
+    notes: |
+      Creates a git commit.
