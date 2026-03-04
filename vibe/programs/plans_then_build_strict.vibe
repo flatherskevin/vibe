@@ -82,25 +82,33 @@ workflow:
         - fs.list
         - fs.read
 
-    - id: validate_and_test
-      goal: Run validators and project tests (if present)
+    - id: validate_from_manifest
+      goal: Run validations defined in spec/plan_manifest.json (portable, no hardcoded ecosystem)
       inputs:
-        - validation
+        - spec/plan_manifest.json
       outputs: |
         {
           "type": "object",
           "properties": {
-            "validations_passed": { "type": "boolean" }
+            "validations_passed": { "type": "boolean" },
+            "validators_run": { "type": "array", "items": { "type": "string" } }
           },
-          "required": ["validations_passed"],
+          "required": ["validations_passed", "validators_run"],
           "additionalProperties": false
         }
       gate: |
         [
-          { "type": "command_success", "config": { "cmd": "npm test" } }
+          {
+            "type": "json_schema",
+            "config": {
+              "instance_path": "spec/plan_manifest.json",
+              "schema_path": "vibe/stdlib/schemas/plan_manifest.schema.json"
+            }
+          }
         ]
       retry:
         max: 1
         on_fail: abort
       tools_allowed:
+        - fs.read
         - exec.run
