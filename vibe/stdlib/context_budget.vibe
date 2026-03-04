@@ -1,0 +1,29 @@
+vibe: 1.0
+
+context:
+  context_budget: |
+    Runtimes SHOULD enforce a context budget.
+
+    Suggested fields:
+    - max_tokens_per_step: cap tokens per step
+    - persistent_docs: list of files that should be reloaded each step
+    - compaction_strategy: how to summarize intermediate state
+
+  max_tokens_per_step: 6000
+
+  persistent_docs: |
+    [
+      "project.vibe",
+      "spec/00_overview.md",
+      "spec/10_architecture.md",
+      "spec/20_artifacts.json",
+      "spec/30_workflow.json",
+      "spec/plan_manifest.json"
+    ]
+
+  compaction_strategy: |
+    After each step, produce:
+    - a brief summary of tool results
+    - a list of files changed
+    - a list of remaining tasks
+    Store it in spec/runlog_compacted.md
