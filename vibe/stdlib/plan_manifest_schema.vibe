@@ -1,0 +1,45 @@
+vibe: 1.0
+
+# Canonical plan manifest schema. Every plan_and_apply program SHOULD produce:
+# - spec/plan_manifest.json
+# and the runtime SHOULD validate it before applying.
+
+context:
+  plan_manifest_notes: |
+    The Plan Manifest is the bridge between planning and execution.
+    It is designed for strict validation and deterministic application.
+
+artifacts:
+  - path: vibe/stdlib/schemas/plan_manifest.schema.json
+    kind: json
+    source:
+      generate: |
+        Emit the canonical JSON Schema for VIBE Plan Manifest v1.
+        This file is static and should rarely change.
+    ownership: generated
+    invariants:
+      - Must be valid JSON
+      - Must declare $schema and type: object
+      - Must define required: meta, budgets, operations, validations
+
+  - path: spec/plan_manifest.json
+    kind: json
+    source:
+      generate: |
+        Produce a Plan Manifest that follows vibe/stdlib/schemas/plan_manifest.schema.json.
+        This manifest must be created during PLAN and consumed during APPLY.
+    ownership: generated
+    invariants:
+      - Must validate against vibe/stdlib/schemas/plan_manifest.schema.json
+      - Must list every file write/patch in operations
+
+validation:
+  - id: plan_manifest_schema_present
+    type: file_exists
+    config: |
+      { "path": "vibe/stdlib/schemas/plan_manifest.schema.json" }
+
+  - id: plan_manifest_present
+    type: file_exists
+    config: |
+      { "path": "spec/plan_manifest.json" }
