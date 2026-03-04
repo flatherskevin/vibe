@@ -1,0 +1,44 @@
+vibe: 1.0
+
+validation:
+  - id: plan_manifest_valid_json
+    type: json_parse
+    config: |
+      { "path": "spec/plan_manifest.json" }
+
+  - id: plan_manifest_schema_valid
+    type: json_schema
+    config: |
+      {
+        "instance_path": "spec/plan_manifest.json",
+        "schema_path": "vibe/stdlib/schemas/plan_manifest.schema.json"
+      }
+
+  - id: required_plans_exist
+    type: file_tree
+    config: |
+      {
+        "required": [
+          "spec/00_overview.md",
+          "spec/10_architecture.md",
+          "spec/20_artifacts.json",
+          "spec/30_workflow.json",
+          "spec/plan_manifest.json"
+        ]
+      }
+
+  - id: forbid_todos
+    type: content_rules
+    config: |
+      {
+        "forbidden_patterns": ["TODO", "FIXME"],
+        "paths_glob": ["**/*.md", "**/*.ts", "**/*.js", "**/*.json", "**/*.vibe"]
+      }
+
+  - id: diff_budget_default
+    type: diff_budget
+    config: |
+      {
+        "max_lines_added": 2000,
+        "max_lines_removed": 2000
+      }
