@@ -1,0 +1,32 @@
+vibe: 1.0
+
+# Gates are executable checks used by workflow steps.
+# Runtimes SHOULD implement these gate types as tool-driven checks.
+# This module provides canonical gate "type" names and configs.
+
+context:
+  gates_spec: |
+    Gate checks are machine-actionable. A gate is a list of checks.
+    Each check has:
+    - type: one of the supported gate types
+    - config: JSON object with parameters
+    - evidence: tool output captured by the runtime (not authored by the model)
+
+validation:
+  - id: gate_types_reference
+    type: reference
+    config: |
+      {
+        "supported_gate_types": [
+          "file_exists",
+          "file_tree",
+          "json_schema",
+          "content_rules",
+          "command_success",
+          "diff_budget"
+        ],
+        "notes": [
+          "Runtimes may add additional gate types, but must keep these stable.",
+          "Gates should be evaluated using tools (fs.read/fs.list/exec.run/etc)."
+        ]
+      }
