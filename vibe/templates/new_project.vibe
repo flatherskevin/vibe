@@ -1,0 +1,45 @@
+vibe: 1.0
+
+meta:
+  name: new_project_template
+  description: Template for creating new VIBE-driven projects
+
+context:
+  problem: |
+    Describe what you want the project to do.
+
+  constraints: |
+    - Must follow VIBE planning workflow
+    - Must produce planning documents first
+
+artifacts:
+  - path: README.md
+    kind: markdown
+    source:
+      generate: |
+        Write a README describing the project.
+    ownership: generated
+
+workflow:
+  mode: plan_and_apply
+
+  steps:
+    - id: create_readme
+      goal: Generate README
+      inputs:
+        - context
+      outputs: |
+        {
+          "type": "object",
+          "properties": {
+            "readme_created": { "type": "boolean" }
+          },
+          "required": ["readme_created"]
+        }
+      gate: |
+        README.md must exist.
+      retry:
+        max: 1
+        on_fail: revise
+      tools_allowed:
+        - fs.write
