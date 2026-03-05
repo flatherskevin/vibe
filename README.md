@@ -1,436 +1,279 @@
 # VIBE
 
-**VIBE** is an AI-first instruction language designed for building and executing structured plans with AI agents.
+**VIBE** is an **AI instruction language** designed to make AI agents reliable when modifying software systems.
 
-Instead of writing code directly, you write `.vibe` programs that describe:
+Instead of letting AI freely generate code, VIBE introduces a **structured execution layer** between human intent and AI actions.
 
-- project goals
-- required artifacts
-- execution workflows
-- validation rules
-- allowed tools
+The workflow looks like this:
 
-An AI runtime (Claude, Codex, etc.) interprets these `.vibe` files and executes them deterministically using a **Plan → Apply workflow**.
+```
+Human intent (natural language)
+        ↓
+AI generates a VIBE plan
+        ↓
+AI executes the VIBE plan deterministically
+```
 
-VIBE acts like **Terraform for AI agents**.
+VIBE acts like **Terraform for AI actions**.
+
+It separates **planning** from **execution**, ensuring that AI systems behave predictably, safely, and repeatably.
+
+---
+
+# The Problem
+
+Modern AI agents are powerful but unreliable when allowed to directly modify codebases or systems.
+
+Common failure modes include:
+
+- hallucinated files
+- incomplete implementations
+- inconsistent architecture decisions
+- uncontrolled side effects
+- partially applied changes
+
+These issues occur because most AI workflows combine **planning and execution in a single step**.
+
+---
+
+# The VIBE Solution
+
+VIBE introduces an **intermediate instruction language** that forces AI systems to:
+
+1. **Create a structured plan**
+2. **Validate that plan**
+3. **Execute the plan deterministically**
+
+Instead of:
+
+```
+Human → AI → Code Changes
+```
+
+You get:
+
+```
+Human → AI → VIBE Plan → AI Execution
+```
+
+This dramatically improves reliability.
+
+---
+
+# Human Workflow
+
+Humans **never write VIBE manually**.
+
+The intended workflow is:
+
+```
+1. Human describes intent in natural language
+2. AI generates a VIBE plan
+3. AI validates the plan
+4. AI executes the plan
+```
+
+Example:
+
+Human prompt:
+
+```
+Add authentication middleware to the API server
+and create integration tests.
+```
+
+AI produces:
+
+```
+plan "Add authentication middleware"
+
+artifact "auth_middleware.go"
+artifact "auth_test.go"
+
+apply "Create authentication middleware"
+apply "Add middleware to router"
+apply "Create integration tests"
+
+validate "Tests pass"
+validate "Server compiles"
+```
+
+The AI then executes the VIBE plan step-by-step.
 
 ---
 
 # Why VIBE Exists
 
-Modern AI agents are powerful but unreliable when asked to directly modify codebases.
+VIBE exists to solve three core problems with current AI coding workflows:
 
-Common problems include:
+### 1. Deterministic Execution
 
-- hallucinated files
-- uncontrolled side effects
-- partial implementations
-- inconsistent planning
+AI must explicitly define what it intends to do before doing it.
 
-VIBE solves this by introducing:
+### 2. Reduced Hallucination
 
-- strict schemas
-- planning artifacts
-- tool-only side effects
-- deterministic workflows
-- validation gates
+Files and artifacts must be declared before modification.
 
-This creates **repeatable, auditable AI-driven development workflows**.
+### 3. Controlled Side Effects
+
+Execution occurs only within the defined plan.
 
 ---
 
 # Core Concepts
 
-## `.vibe` Programs
+## Plan
 
-A VIBE program is a set of `.vibe` files describing a project.
+A **plan** defines the scope of work.
 
-Example layout:
+```
+plan "Implement OAuth login"
+```
 
-    project.vibe
+All work must occur within a plan.
 
-    vibe/
-      stdlib/
-      programs/
-      spec/
+---
 
-    spec/
-      00_overview.md
-      10_architecture.md
-      20_artifacts.json
-      30_workflow.json
-      plan_manifest.json
+## Artifacts
 
-The runtime merges `.vibe` files into a **Program IR** before execution.
+Artifacts define **files or resources** the plan is allowed to modify.
+
+```
+artifact "auth_controller.go"
+artifact "auth_routes.go"
+artifact "oauth_service.go"
+```
+
+Artifacts prevent AI from touching unrelated files.
+
+---
+
+## Apply Steps
+
+Apply steps describe **specific modifications**.
+
+```
+apply "Add OAuth login endpoint"
+apply "Implement OAuth token exchange"
+apply "Register OAuth routes"
+```
+
+These are executed sequentially.
+
+---
+
+## Validation Rules
+
+Validation ensures the plan succeeded.
+
+```
+validate "Tests pass"
+validate "Project builds"
+validate "API server starts"
+```
+
+If validation fails, execution halts.
 
 ---
 
 # Execution Model
 
-VIBE programs run in two phases.
+The runtime executes VIBE in two phases.
 
-## Phase 1 — PLAN
+## Phase 1: Planning
 
-The AI agent:
+AI generates the VIBE plan.
 
-1. reads `.vibe` files
-2. generates planning artifacts in `/spec`
-3. produces a strict `spec/plan_manifest.json`
+The plan must include:
 
-The manifest lists every change that will occur.
-
-No uncontrolled modifications are allowed.
-
-The manifest is validated against the schema located at:
-
-    vibe/stdlib/schemas/plan_manifest.schema.json
+- declared artifacts
+- ordered apply steps
+- validation rules
 
 ---
 
-## Phase 2 — APPLY
+## Phase 2: Apply
 
-The runtime:
+The runtime executes each step:
 
-1. reads the plan manifest
-2. executes listed operations
-3. uses tools for every side effect
-4. validates results
+```
+for step in plan.apply_steps:
+    execute(step)
+```
 
-Supported operations include:
+After execution:
 
-    write
-    patch
-    mkdir
-    delete
-
----
-
-# Example `.vibe` Program
-
-Example root file:
-
-    vibe: 1.0
-
-    meta:
-      name: example_project
-      description: Example VIBE program
-      repo_root: .
-
-    imports:
-      - vibe/stdlib/tools_strict.vibe
-      - vibe/programs/plans_then_build_strict.vibe
-
-    context:
-      problem: |
-        Build a simple example project.
-
-      constraints: |
-        - Generate planning docs first
-        - Produce plan manifest before applying changes
+```
+run_validations()
+```
 
 ---
 
-# Example Plan Manifest
+# Example VIBE File
 
-The plan manifest controls execution.
+```
+plan "Add request logging middleware"
 
-Example:
+artifact "middleware/logging.go"
+artifact "server/router.go"
 
-    {
-      "meta": {
-        "vibe_version": "1.0",
-        "program_name": "example_project",
-        "mode": "plan_and_apply"
-      },
-      "operations": [
-        {
-          "op": "mkdir",
-          "path": "src",
-          "reason": "create source directory"
-        },
-        {
-          "op": "write",
-          "path": "src/hello.txt",
-          "reason": "example file",
-          "content": "Hello VIBE\n"
-        }
-      ]
-    }
+apply "Create logging middleware"
+apply "Attach middleware to router"
 
-The runtime executes **only these operations**.
+validate "Project builds"
+validate "Server starts"
+```
 
 ---
 
-# Tools
+# Why This Matters
 
-Tools define allowed side effects.
+As AI becomes more capable, **direct code generation becomes dangerous at scale**.
 
-Common tools include:
+VIBE provides a **structured instruction layer** that makes AI systems:
 
-    fs.read
-    fs.write
-    fs.apply_patch
-    fs.list
-    exec.run
+- predictable
+- inspectable
+- deterministic
+- safe to run in production environments
 
-Tools define schemas including:
-
-- args_schema
-- result_schema
-- errors_schema
-
-The runtime enforces **tool-truth**:
-
-Agents cannot claim filesystem changes without tool evidence.
+This allows AI agents to operate more like **infrastructure tooling** rather than uncontrolled assistants.
 
 ---
 
-# Gates
+# Analogy
 
-Workflow steps may include gates.
-
-Gates verify conditions before proceeding.
-
-Example gate:
-
-    [
-      {
-        "type": "file_exists",
-        "config": { "path": "spec/plan_manifest.json" }
-      }
-    ]
-
-Supported gate types include:
-
-- file_exists
-- file_tree
-- json_schema
-- content_rules
-- command_success
-- diff_budget
+| System | Purpose |
+|------|------|
+| Terraform | Infrastructure planning |
+| Kubernetes | Container orchestration |
+| Makefiles | Build execution |
+| **VIBE** | AI action planning |
 
 ---
 
-# Validators
+# Long-Term Vision
 
-After execution, validators verify correctness.
+VIBE is intended to become a **universal execution format for AI agents**.
 
-Common validators include:
+Potential runtimes could include:
 
-    file_tree
-    json_schema
-    command
-    content_rules
-
-If validation fails, the run fails.
-
----
-
-# Runtime Logs
-
-Runtimes should generate a compact execution log at:
-
-    spec/runlog_compacted.md
-
-This file records:
-
-- steps executed
-- tool calls
-- files modified
-- gate results
-- remaining tasks
-
-This allows VIBE runs to be **auditable and reproducible**.
+- IDE agents
+- CI/CD agents
+- codebase maintenance agents
+- infrastructure automation agents
+- autonomous software systems
 
 ---
 
-# Security Model
+# Project Status
 
-VIBE runtimes enforce repository safety.
+Early experimental specification.
 
-Required protections include:
-
-- no absolute paths
-- no path traversal (`..`)
-- restricted write scope
-- tool-only side effects
-
-Example write scope:
-
-    allowed:
-      - src/
-      - spec/
-      - docs/
-
-    forbidden:
-      - .git/
-      - node_modules/
+The language is intentionally minimal to allow multiple AI runtimes to implement it.
 
 ---
 
-# Typical Workflow
+# License
 
-1. Write a `.vibe` program.
-
-2. Ask an AI agent to run a VIBE runtime.
-
-3. The agent generates planning docs:
-
-    spec/
-      00_overview.md
-      10_architecture.md
-      20_artifacts.json
-      30_workflow.json
-
-4. The agent generates:
-
-    spec/plan_manifest.json
-
-5. The runtime applies the manifest operations.
-
-6. Validators confirm success.
-
----
-
-# Quick Start
-
-1. Create a new repository.
-
-2. Add a root `project.vibe` file.
-
-3. Import the standard library modules:
-
-    imports:
-      - vibe/stdlib/tools_strict.vibe
-      - vibe/programs/plans_then_build_strict.vibe
-
-4. Provide a problem description in `context`.
-
-5. Run a VIBE-compatible AI agent.
-
-The agent will:
-
-- generate planning docs
-- generate a plan manifest
-- apply the changes
-- validate results
-
----
-
-# Example Prompt for an AI Agent
-
-Example system prompt:
-
-    You are a VIBE runtime.
-
-    1. Parse all .vibe files starting at project.vibe
-    2. Compile them into a Program IR
-    3. Generate planning documents
-    4. Generate spec/plan_manifest.json
-    5. Apply operations listed in the manifest
-    6. Validate results
-    7. Produce spec/runlog_compacted.md
-
----
-
-# Syntax Highlighting
-
-This repository includes a **VS Code syntax highlighter for `.vibe` files**.
-
-The extension files are located at the **root of the repository**.
-
-To run the syntax highlighter locally:
-
-1. Open the repository in VS Code.
-
-2. Press:
-
-    F5
-
-3. VS Code will launch an **Extension Development Host** window.
-
-4. Open any `.vibe` file to see syntax highlighting.
-
-Highlighted features include:
-
-- VIBE sections
-- keys
-- imports
-- block scalars
-- embedded JSON schemas
-
----
-
-# Repository Structure
-
-Recommended structure:
-
-    project.vibe
-
-    vibe/
-      stdlib/
-      programs/
-      spec/
-
-    spec/
-      planning documents
-      plan_manifest.json
-
----
-
-# Reference Documents
-
-Specification files are located in:
-
-    vibe/spec/
-
-Important documents include:
-
-- VIBE_SPEC_v1.md
-- VIBE_RUNTIME_CONTRACT.md
-- VIBE_PROGRAM_IR.md
-- VIBE_SCOPE.md
-- VIBE_ERRORS.md
-- VIBE_STEP_TYPES.md
-- VIBE_DEPENDENCIES.md
-- VIBE_AUTHORING_GUIDE.md
-- VIBE_REFERENCE_PROGRAM.md
-- VIBE_INDEX.md
-
----
-
-# Design Philosophy
-
-VIBE treats AI agents as deterministic executors of structured plans.
-
-Core principles:
-
-- planning before execution
-- schema-first validation
-- minimal implicit behavior
-- tool-driven state changes
-- reproducible runs
-
----
-
-# Future Versions
-
-Possible future improvements include:
-
-- parallel workflows
-- remote tool support
-- richer dependency graphs
-- distributed agent execution
-- streaming execution logs
-
----
-
-# Contributing
-
-Contributions are welcome.
-
-Before submitting changes:
-
-- ensure new features are documented in `/vibe/spec`
-- maintain backward compatibility with `vibe: 1.0`
-- update the reference program if behavior changes
+MIT
