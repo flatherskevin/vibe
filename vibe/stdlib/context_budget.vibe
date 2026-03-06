@@ -1,13 +1,11 @@
 vibe: 1.0
 
 context:
-  context_budget: |
-    Runtimes SHOULD enforce a context budget.
+  context_budget_purpose: |
+    Context budgeting and compaction guidance for VIBE runtimes.
 
-    Suggested fields:
-    - max_tokens_per_step: cap tokens per step
-    - persistent_docs: list of files that should be reloaded each step
-    - compaction_strategy: how to summarize intermediate state
+    This module exists because VIBE is AI-first.
+    Long-running agent workflows need explicit context management to remain reliable.
 
   max_tokens_per_step: 6000
 
@@ -22,8 +20,20 @@ context:
     ]
 
   compaction_strategy: |
-    After each step, produce:
-    - a brief summary of tool results
-    - a list of files changed
-    - a list of remaining tasks
-    Store it in spec/runlog_compacted.md
+    After each meaningful step, the runtime should create a compact summary that includes:
+    - step id
+    - important tool results
+    - files changed
+    - remaining tasks
+    - current failure or risk notes
+
+    This summary should be written to:
+
+    spec/runlog_compacted.md
+
+  runtime_notes: |
+    Runtimes may treat these settings as guidance rather than strict requirements,
+    but they should preserve the overall intent:
+    - bounded context
+    - stable persistent planning docs
+    - explicit compaction output
