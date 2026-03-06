@@ -1,5 +1,16 @@
 vibe: 1.0
 
+context:
+  legacy_notice: |
+    Legacy compatibility tool module.
+
+    This file exists for transitional compatibility only.
+    New VIBE v1 programs should import:
+
+    vibe/stdlib/tools_strict.vibe
+
+    Runtimes should prefer the strict tool contracts defined there.
+
 tools:
   fs.read:
     schema: |
@@ -10,8 +21,16 @@ tools:
         },
         "required": ["path"]
       }
-    notes: |
-      Reads a file from the repository.
+
+  fs.list:
+    schema: |
+      {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" }
+        },
+        "required": ["path"]
+      }
 
   fs.write:
     schema: |
@@ -23,8 +42,6 @@ tools:
         },
         "required": ["path", "content"]
       }
-    notes: |
-      Writes a file. Overwrites if it exists.
 
   fs.apply_patch:
     schema: |
@@ -36,20 +53,6 @@ tools:
         },
         "required": ["path", "patch"]
       }
-    notes: |
-      Applies a unified diff patch to a file.
-
-  fs.list:
-    schema: |
-      {
-        "type": "object",
-        "properties": {
-          "path": { "type": "string" }
-        },
-        "required": ["path"]
-      }
-    notes: |
-      Lists directory contents.
 
   exec.run:
     schema: |
@@ -60,26 +63,3 @@ tools:
         },
         "required": ["cmd"]
       }
-    notes: |
-      Runs a shell command.
-
-  git.status:
-    schema: |
-      {
-        "type": "object",
-        "properties": {}
-      }
-    notes: |
-      Returns git status.
-
-  git.commit:
-    schema: |
-      {
-        "type": "object",
-        "properties": {
-          "message": { "type": "string" }
-        },
-        "required": ["message"]
-      }
-    notes: |
-      Creates a git commit.
