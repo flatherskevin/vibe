@@ -1,46 +1,56 @@
 vibe: 1.0
 
 context:
-  legacy_notice: |
-    Legacy compatibility validator pack.
+  validators_purpose: |
+    Canonical validator pack for VIBE v1.
 
-    This file exists for transitional compatibility only.
-    New VIBE v1 programs should import:
-
-    vibe/stdlib/validators_strict.vibe
+    This module defines the recommended baseline validators for:
+    - planning outputs
+    - plan manifest integrity
+    - repo content rules
+    - diff safety
 
 validation:
-  - id: file_tree
+  - id: plan_manifest_valid_json
+    type: json_parse
+    config: |
+      {
+        "path": "spec/plan_manifest.json"
+      }
+
+  - id: plan_manifest_schema_valid
+    type: json_schema
+    config: |
+      {
+        "instance_path": "spec/plan_manifest.json",
+        "schema_path": "vibe/stdlib/schemas/plan_manifest.schema.json"
+      }
+
+  - id: required_plans_exist
     type: file_tree
     config: |
       {
-        "description": "Ensure required artifacts exist"
+        "required": [
+          "spec/00_overview.md",
+          "spec/10_architecture.md",
+          "spec/20_artifacts.json",
+          "spec/30_workflow.json",
+          "spec/plan_manifest.json"
+        ]
       }
 
-  - id: no_todos
+  - id: forbid_todos
     type: content_rules
     config: |
       {
-        "forbidden_patterns": ["TODO", "FIXME"]
+        "forbidden_patterns": ["TODO", "FIXME"],
+        "paths_glob": ["**/*.md", "**/*.json", "**/*.vibe", "**/*.ts", "**/*.js", "**/*.py"]
       }
 
-  - id: lint
-    type: command
+  - id: diff_budget_default
+    type: diff_budget
     config: |
       {
-        "cmd": "npm run lint"
-      }
-
-  - id: tests
-    type: command
-    config: |
-      {
-        "cmd": "npm test"
-      }
-
-  - id: build
-    type: command
-    config: |
-      {
-        "cmd": "npm run build"
+        "max_lines_added": 2000,
+        "max_lines_removed": 2000
       }
