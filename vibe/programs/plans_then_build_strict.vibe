@@ -4,8 +4,6 @@ imports:
   - vibe/stdlib/gates.vibe
   - vibe/stdlib/plan_manifest_schema.vibe
   - vibe/stdlib/context_budget.vibe
-  - vibe/stdlib/tools_strict.vibe
-  - vibe/stdlib/validators_strict.vibe
 
 artifacts:
   - path: spec/runlog_compacted.md
