@@ -1,5 +1,14 @@
 vibe: 1.0
 
+context:
+  legacy_notice: |
+    Legacy compatibility validator pack.
+
+    This file exists for transitional compatibility only.
+    New VIBE v1 programs should import:
+
+    vibe/stdlib/validators_strict.vibe
+
 validation:
   - id: file_tree
     type: file_tree
