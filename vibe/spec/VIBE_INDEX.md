@@ -38,13 +38,11 @@ This folder contains the normative specification and guidance documents for VIBE
 A repo is “VIBE v1 complete” when it includes:
 
 - Root entrypoint: project.vibe
-- Stdlib tool contracts (strict): vibe/stdlib/tools_strict.vibe
 - Plan manifest schema: vibe/stdlib/schemas/plan_manifest.schema.json
 - Runtime contract + spec docs in vibe/spec/
 - A reference program example: vibe/spec/VIBE_REFERENCE_PROGRAM.md
 
 Optional but useful:
 
-- Strict validators: vibe/stdlib/validators_strict.vibe
 - Gates reference: vibe/stdlib/gates.vibe
 - Context budget guidance: vibe/stdlib/context_budget.vibe
