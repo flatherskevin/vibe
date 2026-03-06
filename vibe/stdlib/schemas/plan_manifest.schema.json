@@ -11,10 +11,22 @@
       "additionalProperties": false,
       "required": ["vibe_version", "program_name", "created_at", "mode"],
       "properties": {
-        "vibe_version": { "type": "string", "enum": ["1.0"] },
-        "program_name": { "type": "string", "minLength": 1 },
-        "created_at": { "type": "string", "minLength": 1 },
-        "mode": { "type": "string", "enum": ["plan_only", "plan_and_apply"] },
+        "vibe_version": {
+          "type": "string",
+          "enum": ["1.0"]
+        },
+        "program_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["plan_only", "plan_and_apply"]
+        },
         "agent": {
           "type": "object",
           "additionalProperties": false,
@@ -30,15 +42,33 @@
       "additionalProperties": false,
       "required": ["max_steps", "max_tool_calls", "max_files_changed"],
       "properties": {
-        "max_steps": { "type": "integer", "minimum": 1, "maximum": 500 },
-        "max_tool_calls": { "type": "integer", "minimum": 1, "maximum": 5000 },
-        "max_files_changed": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "max_steps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "max_tool_calls": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "max_files_changed": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
         "diff_budget": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "max_lines_added": { "type": "integer", "minimum": 0 },
-            "max_lines_removed": { "type": "integer", "minimum": 0 }
+            "max_lines_added": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_lines_removed": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }
@@ -51,26 +81,59 @@
         "additionalProperties": false,
         "required": ["op", "path", "reason"],
         "properties": {
-          "op": { "type": "string", "enum": ["write", "patch", "mkdir", "delete"] },
-          "path": { "type": "string", "minLength": 1 },
-          "reason": { "type": "string", "minLength": 1 },
-          "content": { "type": "string" },
-          "patch": { "type": "string" },
-          "ownership": { "type": "string", "enum": ["generated", "managed", "protected"] },
-          "write_policy": { "type": "string", "enum": ["patch_preferred", "full_overwrite_allowed"] },
+          "op": {
+            "type": "string",
+            "enum": ["write", "patch", "mkdir", "delete"]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          },
+          "patch": {
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string",
+            "enum": ["generated", "managed", "protected"]
+          },
+          "write_policy": {
+            "type": "string",
+            "enum": ["patch_preferred", "full_overwrite_allowed"]
+          },
           "depends_on": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         },
         "allOf": [
           {
-            "if": { "properties": { "op": { "const": "write" } } },
-            "then": { "required": ["content"] }
+            "if": {
+              "properties": {
+                "op": { "const": "write" }
+              }
+            },
+            "then": {
+              "required": ["content"]
+            }
           },
           {
-            "if": { "properties": { "op": { "const": "patch" } } },
-            "then": { "required": ["patch"] }
+            "if": {
+              "properties": {
+                "op": { "const": "patch" }
+              }
+            },
+            "then": {
+              "required": ["patch"]
+            }
           }
         ]
       }
@@ -82,9 +145,17 @@
         "additionalProperties": false,
         "required": ["id", "type", "config"],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "type": { "type": "string", "minLength": 1 },
-          "config": { "type": "object" }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "config": {
+            "type": "object"
+          }
         }
       }
     }
