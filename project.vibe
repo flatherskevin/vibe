@@ -2,45 +2,73 @@ vibe: 1.0
 
 meta:
   name: vibe_program_root
-  description: Root VIBE program. Generates planning docs, then executes a strict plan manifest.
+  description: Root VIBE program. Uses canonical stdlib modules and a strict plan manifest to perform real work.
   repo_root: .
+  runtime_min: 1.0
+  runtime_max: 1.x
+  repo_write_scope:
+    allowed:
+      - spec/
+      - docs/
+      - src/
+      - test/
+      - tests/
+      - vibe/
+    forbidden:
+      - .git/
+      - node_modules/
+      - dist/
+      - build/
+      - .next/
+      - .cache/
 
 imports:
   - vibe/stdlib/tools.vibe
+  - vibe/stdlib/gates.vibe
+  - vibe/stdlib/plan_manifest_schema.vibe
+  - vibe/stdlib/context_budget.vibe
   - vibe/stdlib/validators.vibe
   - vibe/programs/plans_then_build.vibe
-  - vibe/programs/plans_then_build_strict.vibe
 
 context:
   problem: |
     Describe the user’s high-level goal here.
   constraints: |
     - Must be deterministic and tool-driven.
-    - Must generate planning docs under spec/
+    - Must generate planning docs under spec/.
     - Must generate spec/plan_manifest.json before applying changes.
-    - Must prefer patches over full overwrites when possible.
+    - Must apply only operations listed in spec/plan_manifest.json.
+    - Must respect repo_write_scope and diff budgets.
   glossary: |
-    - VIBE: AI-first planning+execution language.
+    - VIBE: AI-first planning and execution language.
     - Artifact: A repo file or directory with invariants.
-    - Plan Manifest: A strict JSON file that lists all operations to apply.
+    - Plan Manifest: A strict JSON file listing operations to apply.
 
 workflow:
   mode: plan_and_apply
   steps:
     - id: entrypoint
-      goal: Delegate to imported workflows (planning + strict manifest + apply)
+      type: generic
+      goal: Entrypoint step. Imported workflows define the actual behavior.
       inputs:
         - imports
       outputs: |
         {
           "type": "object",
-          "properties": { "ok": { "type": "boolean" } },
+          "properties": {
+            "ok": { "type": "boolean" }
+          },
           "required": ["ok"],
           "additionalProperties": false
         }
       gate: |
         [
-          { "type": "file_exists", "config": { "path": "spec/plan_manifest.json" } }
+          {
+            "type": "file_exists",
+            "config": {
+              "path": "spec/plan_manifest.json"
+            }
+          }
         ]
       retry:
         max: 1
