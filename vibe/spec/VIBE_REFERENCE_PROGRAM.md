@@ -50,9 +50,7 @@ Recommended minimal layout:
 
     vibe/
       stdlib/
-        tools_strict.vibe
         gates.vibe
-        validators_strict.vibe
         plan_manifest_schema.vibe
       programs/
         plans_then_build_strict.vibe
@@ -98,10 +96,8 @@ A minimal root program may look like:
           - build/
 
     imports:
-      - vibe/stdlib/tools_strict.vibe
       - vibe/stdlib/gates.vibe
       - vibe/stdlib/plan_manifest_schema.vibe
-      - vibe/stdlib/validators_strict.vibe
       - vibe/programs/plans_then_build_strict.vibe
 
     context:
