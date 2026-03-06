@@ -1,29 +1,87 @@
 # VIBE Reference Program (v1.0)
 
-This document provides a canonical, minimal reference program for VIBE v1.0.
+This document provides a canonical reference program for VIBE v1.0.
+
+Its purpose is to show how a minimal but complete VIBE program should be structured and interpreted.
+
+This reference is useful for:
+
+- runtime implementers
+- AI systems authoring `.vibe` files
+- users learning the language
+- regression testing of VIBE tooling
 
 It demonstrates:
 
-- A root project.vibe
-- Planning-first workflow
-- A strict spec/plan_manifest.json
-- Manifest-driven validation commands (no hardcoded npm)
-
-Use this as the template for authoring new `.vibe` programs and as a gold standard for runtime behavior.
+- a root `project.vibe`
+- imports
+- planning artifacts
+- workflow steps
+- plan manifest expectations
+- validators
+- runtime behavior
 
 ---
 
-## 1) Minimal project.vibe (reference)
+## 1. Goals of the Reference Program
 
-The root entrypoint imports strict tools, the plan manifest schema, and the strict workflow.
+The reference program is intentionally small.
 
-Example structure:
+It should demonstrate the following VIBE properties:
+
+- deterministic parse and merge
+- planning before execution
+- strict plan manifest generation
+- manifest-driven apply
+- validator-backed completion
+- bounded side effects
+
+The reference program is not meant to be feature-complete.
+
+It is meant to be clear, portable, and representative.
+
+---
+
+## 2. Reference Repository Layout
+
+Recommended minimal layout:
+
+    project.vibe
+
+    vibe/
+      stdlib/
+        tools_strict.vibe
+        gates.vibe
+        validators_strict.vibe
+        plan_manifest_schema.vibe
+      programs/
+        plans_then_build_strict.vibe
+      spec/
+        VIBE_SPEC_v1.md
+        VIBE_RUNTIME_CONTRACT.md
+        VIBE_REFERENCE_PROGRAM.md
+
+    spec/
+      00_overview.md
+      10_architecture.md
+      20_artifacts.json
+      30_workflow.json
+      plan_manifest.json
+      runlog_compacted.md
+
+This structure illustrates both the language and a typical runtime output directory.
+
+---
+
+## 3. Reference `project.vibe`
+
+A minimal root program may look like:
 
     vibe: 1.0
 
     meta:
       name: reference_program
-      description: Minimal VIBE v1 program that plans, emits a manifest, applies it, and validates.
+      description: Minimal VIBE reference program
       repo_root: .
       runtime_min: 1.0
       runtime_max: 1.x
@@ -48,32 +106,94 @@ Example structure:
 
     context:
       problem: |
-        Build a tiny example project scaffold.
+        Build a small example repository using a planning-first workflow.
+
       constraints: |
-        - Generate planning docs first.
-        - Produce spec/plan_manifest.json before any non-spec changes.
-        - Apply only manifest operations.
+        - Generate planning artifacts first.
+        - Produce spec/plan_manifest.json before any non-spec writes.
+        - Apply only operations listed in the manifest.
+        - Validate all results before marking the run complete.
 
-Notes:
+This root file defines:
 
-- The runtime should compile/merge imports deterministically.
-- The workflow is defined by imported modules.
+- metadata
+- imports
+- repository scope
+- planning constraints
+
+The imported modules supply most of the behavior.
 
 ---
 
-## 2) Example spec/plan_manifest.json (valid)
+## 4. Expected Planning Outputs
 
-This is an example manifest that conforms to:
+In a compliant run, the planning phase should create at least:
 
-    vibe/stdlib/schemas/plan_manifest.schema.json
+    spec/00_overview.md
+    spec/10_architecture.md
+    spec/20_artifacts.json
+    spec/30_workflow.json
+    spec/plan_manifest.json
 
-Example manifest:
+These files form the planning contract for APPLY.
+
+### 4.1 `spec/00_overview.md`
+
+Human-readable overview of:
+
+- project purpose
+- users
+- success criteria
+
+### 4.2 `spec/10_architecture.md`
+
+High-level architecture and design decisions.
+
+### 4.3 `spec/20_artifacts.json`
+
+Structured artifact manifest describing expected files.
+
+### 4.4 `spec/30_workflow.json`
+
+Structured workflow summary derived from planning.
+
+### 4.5 `spec/plan_manifest.json`
+
+Authoritative operation list for APPLY.
+
+This file is the bridge between planning and execution.
+
+---
+
+## 5. Reference Workflow Behavior
+
+A typical strict workflow contains three major phases inside the overall run:
+
+### 5.1 Plan
+
+Generate structured planning outputs and a valid manifest.
+
+### 5.2 Apply
+
+Read the plan manifest and perform only the operations listed there.
+
+### 5.3 Validate
+
+Run file, schema, and command validators to confirm success.
+
+This maps cleanly onto VIBE’s overall PLAN → APPLY model.
+
+---
+
+## 6. Reference Plan Manifest
+
+A valid minimal `spec/plan_manifest.json` may look like:
 
     {
       "meta": {
         "vibe_version": "1.0",
         "program_name": "reference_program",
-        "created_at": "2026-03-04T00:00:00Z",
+        "created_at": "2026-03-06T00:00:00Z",
         "mode": "plan_and_apply",
         "agent": {
           "provider": "example",
@@ -83,7 +203,7 @@ Example manifest:
       "budgets": {
         "max_steps": 50,
         "max_tool_calls": 500,
-        "max_files_changed": 200,
+        "max_files_changed": 50,
         "diff_budget": {
           "max_lines_added": 500,
           "max_lines_removed": 500
@@ -98,14 +218,10 @@ Example manifest:
         {
           "op": "write",
           "path": "src/hello.txt",
-          "reason": "Create a simple example artifact",
+          "reason": "Create example artifact",
           "content": "Hello from VIBE v1.\n",
           "ownership": "generated",
-          "write_policy": "full_overwrite_allowed",
-          "depends_on": [
-            "spec/00_overview.md",
-            "spec/plan_manifest.json"
-          ]
+          "write_policy": "full_overwrite_allowed"
         }
       ],
       "validations": [
@@ -133,35 +249,186 @@ Example manifest:
       ]
     }
 
----
+This example demonstrates:
 
-## 3) Manifest-driven validation commands (portable)
-
-To avoid hardcoding commands like npm test, validation commands should come from the manifest.
-
-Example validator entry:
-
-    {
-      "id": "smoke_test",
-      "type": "command",
-      "config": {
-        "cmd": "echo OK"
-      }
-    }
-
-A runtime can interpret this as:
-
-- run exec.run(cmd)
-- require exit_code == 0
+- manifest metadata
+- execution budgets
+- operations
+- validations
 
 ---
 
-## 4) Recommended authoring pattern
+## 7. Reference Step Types
 
-Follow these guidelines when writing `.vibe` programs:
+A strict reference workflow commonly uses these step types:
 
-- Always generate planning docs first (spec/*)
-- Always produce spec/plan_manifest.json before APPLY
-- Put enforcement logic in JSON schemas and validators
-- Prefer patches over full overwrites
-- Keep workflow steps small and bounded
+- `plan`
+- `apply`
+- `validate`
+- optional `summarize`
+
+Example conceptual sequence:
+
+    1. generate_planning_docs
+    2. plan_manifest
+    3. apply_operations
+    4. validate_from_manifest
+    5. summarize_run
+
+This sequence is not mandatory, but it is strongly recommended.
+
+---
+
+## 8. Expected Runtime Guarantees
+
+A compliant runtime running the reference program should guarantee:
+
+- deterministic import resolution
+- deterministic merge behavior
+- manifest validation before APPLY
+- no non-manifest changes during APPLY
+- tool-only side effects
+- validator-backed completion
+
+It should also enforce:
+
+- path safety
+- repo write scope
+- tool allowlists
+- diff budgets where configured
+
+---
+
+## 9. Expected Runtime Artifacts
+
+A runtime should usually produce:
+
+- planning docs in `spec/`
+- `spec/plan_manifest.json`
+- `spec/runlog_compacted.md`
+
+The run log should summarize:
+
+- step execution
+- tool calls
+- file changes
+- gate results
+- validator results
+
+---
+
+## 10. Minimal Example Run
+
+A minimal successful run looks like this:
+
+### 10.1 Source load
+
+The runtime loads:
+
+- `project.vibe`
+- imported stdlib files
+- imported workflow modules
+
+### 10.2 Program compile
+
+The runtime merges source files into a normalized Program IR.
+
+### 10.3 Planning
+
+The runtime generates planning docs and writes `spec/plan_manifest.json`.
+
+### 10.4 Manifest validation
+
+The runtime validates the manifest against:
+
+    vibe/stdlib/schemas/plan_manifest.schema.json
+
+### 10.5 Apply
+
+The runtime performs manifest operations only.
+
+### 10.6 Validate
+
+The runtime runs validators from the manifest and/or program.
+
+### 10.7 Completion
+
+The runtime emits `spec/runlog_compacted.md` and marks the run successful.
+
+---
+
+## 11. What This Reference Program Is Meant to Teach
+
+This reference program is meant to teach five core VIBE habits:
+
+### 11.1 Plan first
+
+Do not modify implementation files before planning is complete.
+
+### 11.2 Use manifests as contracts
+
+The plan manifest is not a suggestion. It is the execution contract.
+
+### 11.3 Use schemas and validators
+
+If something matters, make it machine-checkable.
+
+### 11.4 Limit side effects
+
+All repository mutations should be explicit, bounded, and tool-driven.
+
+### 11.5 Prefer deterministic execution over improvisation
+
+VIBE is not designed to maximize model creativity.
+
+It is designed to maximize execution reliability.
+
+---
+
+## 12. Recommended Use in Testing
+
+Runtime implementers should use this reference program for:
+
+- parser tests
+- merge tests
+- manifest validation tests
+- apply enforcement tests
+- regression tests
+
+A runtime that cannot execute the reference program correctly is not ready for broader use.
+
+---
+
+## 13. Relationship to Other Spec Documents
+
+This file is a teaching and reference document.
+
+For normative behavior, see:
+
+- `VIBE_SPEC_v1.md`
+- `VIBE_RUNTIME_CONTRACT.md`
+- `VIBE_PROGRAM_IR.md`
+- `VIBE_SCOPE.md`
+- `VIBE_ERRORS.md`
+
+For authoring guidance, see:
+
+- `VIBE_AUTHORING_GUIDE.md`
+
+For runtime extensibility, see:
+
+- `VIBE_RUNTIME_HOOKS.md`
+
+---
+
+## 14. Design Philosophy
+
+Every language benefits from a canonical example.
+
+For VIBE, the reference program is especially important because AI systems learn better from:
+
+- concrete structure
+- repeated patterns
+- explicit examples
+
+A good reference program makes the whole language easier to implement, easier to author, and easier to trust.
