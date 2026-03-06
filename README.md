@@ -1,389 +1,144 @@
 # VIBE
 
-**VIBE** is an **AI-first instruction language** designed to make AI agents reliable when modifying software systems.
+**VIBE** is an **AI-first programming language** designed to make AI agents reliable when modifying software systems.
 
-Instead of letting AI freely generate code, VIBE introduces a **structured execution layer** between human intent and AI actions.
+Most AI agent workflows today rely on **unstructured planning documents** (usually markdown). These plans look good to humans, but they are a poor control surface for AI systems.
 
-The workflow looks like this:
+They are:
 
-```
-Human intent (natural language)
-        ↓
-AI generates a VIBE program
-        ↓
-AI produces a structured execution plan
-        ↓
-AI executes the plan deterministically
-```
+- ambiguous
+- hard to validate
+- difficult to execute deterministically
+- easy for models to drift away from
 
-VIBE acts like **Terraform for AI actions**.
-
-It separates **planning** from **execution**, ensuring that AI systems behave predictably, safely, and repeatably.
+VIBE solves this by giving AI systems a **structured programming language** to generate instead of unstructured plans.
 
 ---
 
-# The Problem
+# The Core Idea
 
-Modern AI agents are powerful but unreliable when allowed to directly modify codebases or systems.
+Instead of this:
 
-Common failure modes include:
+Natural language → Markdown planning docs → AI execution
+
+VIBE introduces a structured intermediate language:
+
+Natural language → **VIBE program** → AI execution → Code changes
+
+The AI writes a **program describing the work**, and that program becomes the execution contract.
+
+---
+
+# Why This Matters
+
+Unstructured plans cause real problems for AI agents:
 
 - hallucinated files
-- incomplete implementations
-- inconsistent architecture decisions
+- partially implemented features
+- architecture drift
 - uncontrolled side effects
-- partially applied changes
+- inconsistent execution
 
-These issues occur because most AI workflows combine **planning and execution in a single step**.
+These failures happen because the AI is trying to follow **loose natural language instructions** it wrote earlier.
 
----
+VIBE replaces those instructions with a **formal structure**.
 
-# The VIBE Solution
-
-VIBE introduces an **intermediate instruction language** that forces AI systems to:
-
-1. **Create a structured plan**
-2. **Validate that plan**
-3. **Execute the plan deterministically**
-
-Instead of:
-
-```
-Human → AI → Code Changes
-```
-
-You get:
-
-```
-Human → AI → VIBE Program → Plan Manifest → Deterministic Execution
-```
-
-This dramatically improves reliability.
+Instead of writing a paragraph describing what to do, the AI writes a **program describing what to do**.
 
 ---
 
 # Human Workflow
 
-Humans **never write `.vibe` files manually**.
+Humans **do not write VIBE programs manually**.
 
 The intended workflow is:
 
-```
 1. Human describes intent in natural language
-2. AI generates VIBE planning artifacts
-3. AI produces a strict plan manifest
-4. AI executes the manifest
-```
+2. AI generates a VIBE program
+3. AI executes that program to produce targeted output
 
-Example prompt:
+Example intent:
 
-```
-Add authentication middleware to the API server
-and create integration tests.
-```
+Add authentication middleware and create integration tests.
 
-The AI generates planning documents and ultimately produces:
-
-```
-spec/plan_manifest.json
-```
-
-This manifest defines **every repository operation** that will occur.
-
-The runtime executes **only the operations listed in the manifest**.
+The AI then generates a VIBE program describing the work and executes it.
 
 ---
 
 # Core Concepts
 
-## `.vibe` Programs
+## VIBE Programs
 
-A VIBE program is a collection of `.vibe` files describing a project.
+A VIBE program defines the work to be done.
 
-Example structure:
+Programs describe:
 
-```
-project.vibe
+- scope
+- artifacts
+- execution steps
+- validation rules
 
-vibe/
-  stdlib/
-  programs/
-  spec/
+This structure allows the runtime to execute the work deterministically.
 
-spec/
-  planning documents
-  plan_manifest.json
-```
+---
 
-The runtime merges `.vibe` files into a **Program IR** before execution.
+## Artifacts
+
+Artifacts define **what files or resources are allowed to change**.
+
+This prevents AI agents from modifying unrelated parts of the system.
+
+---
+
+## Apply Steps
+
+Apply steps define the **actions the AI must perform**.
+
+Instead of vague instructions, execution is broken into explicit steps.
+
+---
+
+## Validation
+
+Validation rules verify that the intended outcome was achieved.
+
+Examples include:
+
+- project builds
+- tests pass
+- services start successfully
+
+If validation fails, execution stops.
 
 ---
 
 # Execution Model
 
-VIBE programs run in two phases.
+VIBE runs in two phases.
 
-## Phase 1 — PLAN
+## Phase 1 — Planning
 
-The AI agent:
+The AI generates a VIBE program describing the intended work.
 
-1. reads `.vibe` files
-2. generates planning artifacts in `/spec`
-3. produces a strict `spec/plan_manifest.json`
+## Phase 2 — Execution
 
-Example planning outputs:
+The runtime executes the program step-by-step and applies changes to the system.
 
-```
-spec/
-  00_overview.md
-  10_architecture.md
-  20_artifacts.json
-  30_workflow.json
-  plan_manifest.json
-```
+This separation dramatically improves reliability.
 
 ---
 
-## Phase 2 — APPLY
+# Why Use VIBE
 
-The runtime:
+VIBE helps AI agents behave more like **infrastructure tooling** instead of unpredictable assistants.
 
-1. reads `spec/plan_manifest.json`
-2. executes listed operations
-3. uses tools for every side effect
-4. validates results
+Benefits include:
 
-Example operations:
-
-```
-write
-patch
-mkdir
-delete
-```
-
-Only operations listed in the manifest are allowed.
-
----
-
-# Tools
-
-Tools define **allowed side effects**.
-
-Example tools:
-
-```
-fs.read
-fs.write
-fs.apply_patch
-fs.list
-exec.run
-```
-
-Tools define schemas including:
-
-- args_schema
-- result_schema
-- errors_schema
-
-This enforces **tool-truth**.
-
-AI agents cannot claim filesystem changes without tool evidence.
-
----
-
-# Gates
-
-Workflow steps may include gates.
-
-Gates verify conditions before execution continues.
-
-Example:
-
-```
-[
-  {
-    "type": "file_exists",
-    "config": { "path": "spec/plan_manifest.json" }
-  }
-]
-```
-
-Supported gate types include:
-
-- file_exists
-- file_tree
-- json_schema
-- content_rules
-- command_success
-- diff_budget
-
----
-
-# Validators
-
-Validators verify correctness after execution.
-
-Examples:
-
-```
-file_tree
-json_schema
-command
-content_rules
-diff_budget
-```
-
-If validation fails, the run fails.
-
----
-
-# Subagents
-
-VIBE supports **bounded subagents** for complex planning workflows.
-
-Subagents are specialized workers used during the planning phase.
-
-Example roles:
-
-- planner
-- researcher
-- generator
-- validator
-- summarizer
-
-Subagents produce **structured handoff artifacts**:
-
-```
-spec/subagents/repo_research.json
-spec/subagents/artifact_plan.json
-spec/subagents/plan_review.json
-```
-
-The parent runtime remains responsible for:
-
-- final plan manifest generation
-- applying repository changes
-- running validators
-- enforcing policy
-
-Subagents assist planning but **never bypass the runtime's safety guarantees**.
-
----
-
-# Example `.vibe` Program
-
-Example root file:
-
-```
-vibe: 1.0
-
-imports:
-  - vibe/stdlib/tools.vibe
-  - vibe/programs/plans_then_build.vibe
-```
-
-The imported program defines planning and execution behavior.
-
----
-
-# Example Plan Manifest
-
-```
-{
-  "meta": {
-    "vibe_version": "1.0",
-    "program_name": "example_project",
-    "mode": "plan_and_apply"
-  },
-  "operations": [
-    {
-      "op": "mkdir",
-      "path": "src",
-      "reason": "create source directory"
-    },
-    {
-      "op": "write",
-      "path": "src/hello.txt",
-      "reason": "example file",
-      "content": "Hello VIBE\n"
-    }
-  ]
-}
-```
-
-The runtime executes **only these operations**.
-
----
-
-# Security Model
-
-VIBE runtimes enforce repository safety.
-
-Required protections include:
-
-- no absolute paths
-- no path traversal (`..`)
-- restricted write scope
-- tool-only side effects
-
-Example scope:
-
-```
-allowed:
-  - src/
-  - spec/
-  - docs/
-
-forbidden:
-  - .git/
-  - node_modules/
-```
-
----
-
-# Repository Structure
-
-Recommended structure:
-
-```
-project.vibe
-
-vibe/
-  stdlib/
-    tools.vibe
-    validators.vibe
-    gates.vibe
-    context_budget.vibe
-    plan_manifest_schema.vibe
-
-  programs/
-    plans_then_build.vibe
-    multi_agent_plan_apply.vibe
-
-  spec/
-    language specification
-```
-
----
-
-# Reference Documents
-
-Specification files are located in:
-
-```
-vibe/spec/
-```
-
-Important documents include:
-
-- VIBE_SPEC_v1.md
-- VIBE_RUNTIME_CONTRACT.md
-- VIBE_PROGRAM_IR.md
-- VIBE_SCOPE.md
-- VIBE_ERRORS.md
-- VIBE_SUBAGENTS.md
-- VIBE_REFERENCE_PROGRAM.md
+- deterministic execution
+- explicit scope
+- controlled side effects
+- structured reasoning
+- improved reliability
 
 ---
 
@@ -394,15 +149,15 @@ Important documents include:
 | Terraform | Infrastructure planning |
 | Kubernetes | Container orchestration |
 | Makefiles | Build execution |
-| **VIBE** | AI action planning |
+| **VIBE** | AI action programming |
 
 ---
 
 # Long-Term Vision
 
-VIBE aims to become a **universal execution format for AI agents**.
+VIBE is intended to become a **universal execution format for AI agents**.
 
-Possible runtimes include:
+Potential runtimes include:
 
 - IDE agents
 - CI/CD automation
@@ -410,13 +165,19 @@ Possible runtimes include:
 - infrastructure automation agents
 - autonomous software systems
 
+The goal is simple:
+
+AI agents should not plan complex work in **unstructured prose**.
+
+They should write **programs**.
+
 ---
 
 # Project Status
 
-Experimental language specification.
+Early experimental specification.
 
-The language is intentionally minimal so multiple AI runtimes can implement it.
+The language is intentionally minimal so that different AI runtimes can implement it.
 
 ---
 
