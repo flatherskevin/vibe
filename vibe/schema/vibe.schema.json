@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vibe-lang.org/schema/v1",
+  "title": "VIBE Compiled Specification",
+  "description": "Schema for compiled AI work specification files (.vibe)",
+  "type": "object",
+  "required": ["meta"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Metadata describing the compiled specification",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name for this specification"
+        },
+        "version": {
+          "type": ["string", "number"],
+          "description": "Version of the specification"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the work"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or generator of the specification"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "sources": {
+      "type": "array",
+      "description": "Artifacts used during compilation",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "scope": {
+      "type": "object",
+      "description": "Defines repository scope for the compiled work",
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "artifacts": {
+      "type": "object",
+      "description": "Expected outputs from the compiled work",
+      "properties": {
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "constraints": {
+      "type": "object",
+      "description": "Constraints for downstream systems",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"]
+      }
+    },
+
+    "transforms": {
+      "type": "object",
+      "description": "Optional transformations derived during compilation",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"]
+      }
+    },
+
+    "validation": {
+      "type": "object",
+      "description": "Conditions that must hold true after execution",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"]
+      }
+    },
+
+    "handoff": {
+      "type": "object",
+      "description": "Information for downstream systems consuming the compiled spec",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean"]
+      }
+    }
+  },
+
+  "additionalProperties": false
+}
