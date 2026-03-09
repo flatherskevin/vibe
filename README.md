@@ -1,183 +1,251 @@
 # VIBE
 
-**VIBE** is an **AI-first programming language** designed to make AI agents reliable when modifying software systems.
+**VIBE is a compiled specification format for AI software work.**
 
-Most AI agent workflows today rely on **unstructured planning documents** (usually markdown). These plans look good to humans, but they are a poor control surface for AI systems.
+Modern AI workflows generate large amounts of planning artifacts:
 
-They are:
+- markdown plans
+- research documents
+- task breakdowns
+- architecture notes
+- AI conversation outputs
+- issue lists
+- PRDs
 
-- ambiguous
-- hard to validate
-- difficult to execute deterministically
-- easy for models to drift away from
+These artifacts are **useful for humans**, but **unreliable as execution contracts** for AI systems.
 
-VIBE solves this by giving AI systems a **structured programming language** to generate instead of unstructured plans.
+They are ambiguous, inconsistent, and difficult to validate.
 
----
+VIBE solves this problem by acting as a **compile target**.
 
-# The Core Idea
-
-Instead of this:
-
-Natural language → Markdown planning docs → AI execution
-
-VIBE introduces a structured intermediate language:
-
-Natural language → **VIBE program** → AI execution → Code changes
-
-The AI writes a **program describing the work**, and that program becomes the execution contract.
+Instead of letting AI systems directly execute markdown plans, those plans are **compiled into `.vibe` files**, which become a **structured contract describing the intended work.**
 
 ---
 
-# Why This Matters
+# Core Idea
 
-Unstructured plans cause real problems for AI agents:
+```
+Natural Language
+        ↓
+Research / Planning Tools
+        ↓
+Markdown Artifacts
+        ↓
+AI Compiler
+        ↓
+.vibe
+        ↓
+Execution System
+```
 
-- hallucinated files
-- partially implemented features
-- architecture drift
-- uncontrolled side effects
-- inconsistent execution
+VIBE does **not** perform planning.
 
-These failures happen because the AI is trying to follow **loose natural language instructions** it wrote earlier.
+VIBE does **not** perform execution.
 
-VIBE replaces those instructions with a **formal structure**.
-
-Instead of writing a paragraph describing what to do, the AI writes a **program describing what to do**.
-
----
-
-# Human Workflow
-
-Humans **do not write VIBE programs manually**.
-
-The intended workflow is:
-
-1. Human describes intent in natural language
-2. AI generates a VIBE program
-3. AI executes that program to produce targeted output
-
-Example intent:
-
-Add authentication middleware and create integration tests.
-
-The AI then generates a VIBE program describing the work and executes it.
+VIBE exists as the **normalized interface between them.**
 
 ---
 
-# Core Concepts
+# Why VIBE Exists
 
-## VIBE Programs
+AI systems are excellent at exploration and planning, but poor at:
 
-A VIBE program defines the work to be done.
+- maintaining deterministic structure
+- respecting execution scope
+- producing stable machine-readable contracts
 
-Programs describe:
+Markdown plans drift over time and become unreliable.
 
-- scope
-- artifacts
-- execution steps
+VIBE introduces a **compiled specification layer** that transforms messy planning artifacts into a **structured, validated contract**.
+
+This allows execution systems to operate with **deterministic inputs**.
+
+---
+
+# What a `.vibe` File Represents
+
+A `.vibe` file is the **compiled representation of intended work**.
+
+It may include:
+
+- metadata
+- source artifacts used during compilation
+- scoped files and directories
+- required outputs
+- transformations
+- constraints
 - validation rules
+- execution intent
 
-This structure allows the runtime to execute the work deterministically.
+Execution systems may interpret `.vibe` however they choose.
 
----
-
-## Artifacts
-
-Artifacts define **what files or resources are allowed to change**.
-
-This prevents AI agents from modifying unrelated parts of the system.
+VIBE simply guarantees that the **intent is normalized and structured.**
 
 ---
 
-## Apply Steps
+# Example
 
-Apply steps define the **actions the AI must perform**.
+Source planning artifacts:
 
-Instead of vague instructions, execution is broken into explicit steps.
+```
+docs/plan.md
+docs/architecture.md
+docs/tasks.md
+```
 
----
+Compiled output:
 
-## Validation
+```
+build_feature.vibe
+```
 
-Validation rules verify that the intended outcome was achieved.
+Example `.vibe` file:
 
-Examples include:
+```yaml
+meta:
+  name: implement-authentication
+  version: 1
 
-- project builds
-- tests pass
-- services start successfully
+sources:
+  - docs/plan.md
+  - docs/architecture.md
+  - docs/tasks.md
 
-If validation fails, execution stops.
+scope:
+  include:
+    - src/auth/**
+    - tests/auth/**
+  exclude:
+    - migrations/**
 
----
+artifacts:
+  outputs:
+    - src/auth/service.py
+    - src/auth/routes.py
+    - tests/auth/test_auth.py
 
-# Execution Model
+constraints:
+  language: python
+  framework: fastapi
 
-VIBE runs in two phases.
-
-## Phase 1 — Planning
-
-The AI generates a VIBE program describing the intended work.
-
-## Phase 2 — Execution
-
-The runtime executes the program step-by-step and applies changes to the system.
-
-This separation dramatically improves reliability.
-
----
-
-# Why Use VIBE
-
-VIBE helps AI agents behave more like **infrastructure tooling** instead of unpredictable assistants.
-
-Benefits include:
-
-- deterministic execution
-- explicit scope
-- controlled side effects
-- structured reasoning
-- improved reliability
-
----
-
-# Analogy
-
-| System | Purpose |
-|------|------|
-| Terraform | Infrastructure planning |
-| Kubernetes | Container orchestration |
-| Makefiles | Build execution |
-| **VIBE** | AI action programming |
+validation:
+  tests_required: true
+  lint_required: true
+```
 
 ---
 
-# Long-Term Vision
+# Design Principles
 
-VIBE is intended to become a **universal execution format for AI agents**.
+### 1. Compile, Don't Plan
 
-Potential runtimes include:
+Planning should happen in external systems.
 
-- IDE agents
-- CI/CD automation
-- codebase maintenance agents
-- infrastructure automation agents
-- autonomous software systems
-
-The goal is simple:
-
-AI agents should not plan complex work in **unstructured prose**.
-
-They should write **programs**.
+VIBE exists only as the **compiled contract**.
 
 ---
 
-# Project Status
+### 2. Deterministic Structure
 
-Early experimental specification.
+`.vibe` files are designed to be:
 
-The language is intentionally minimal so that different AI runtimes can implement it.
+- machine readable
+- schema validated
+- predictable for AI systems
+
+---
+
+### 3. Tool-Agnostic
+
+Any system can generate `.vibe`.
+
+Examples:
+
+- research agents
+- planning frameworks
+- code assistants
+- CI pipelines
+- IDE tools
+
+---
+
+### 4. Runtime Independence
+
+VIBE does not prescribe execution.
+
+Execution systems may:
+
+- generate code
+- apply repository changes
+- produce infrastructure
+- run validations
+- orchestrate pipelines
+
+VIBE simply describes the **compiled intent.**
+
+---
+
+# Typical Workflow
+
+```
+1. AI research tool generates planning docs
+2. Planning artifacts accumulate (markdown, notes, specs)
+3. AI compiler converts artifacts into `.vibe`
+4. `.vibe` becomes the contract for the next system
+5. downstream system executes the work
+```
+
+---
+
+# Why Not Just Use Markdown?
+
+Markdown is great for **humans**, but poor for **machines**.
+
+Problems:
+
+- inconsistent structure
+- missing fields
+- ambiguous intent
+- difficult validation
+- scope drift
+
+`.vibe` provides a **strict schema** that AI systems can reliably consume.
+
+---
+
+# Goals of the Project
+
+VIBE aims to become a **universal compiled format for AI work specification.**
+
+Similar to how compilers normalize code before execution, VIBE normalizes **AI-generated work plans** before downstream systems act on them.
+
+---
+
+# Future Tooling
+
+Planned tooling includes:
+
+```
+vibe compile
+vibe validate
+vibe inspect
+vibe normalize
+```
+
+As well as integrations through:
+
+- MCP servers
+- IDE plugins
+- AI skills
+- CI pipelines
+
+---
+
+# Status
+
+Early specification.
+
+The goal of this repository is to define the **format and philosophy of compiled AI work contracts.**
 
 ---
 
