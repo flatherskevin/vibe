@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: session_bootstrap_decisions
   description: >
@@ -36,7 +36,7 @@ and the `docs/vibe/` session directory convention.
 ### Background
 <!-- id: background, type: analysis -->
 
-The VIBE repository contains the full v2 specification, standard library,
+The VIBE repository contains the full v1 specification, standard library,
 templates, and schema — but no guidance for AI agents entering the repo.
 The `project.vibe.md` root document exists and shows conventions, but agents
 need explicit instructions to know they should produce `.vibe.md` files and

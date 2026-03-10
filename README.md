@@ -35,7 +35,7 @@ Every `.vibe.md` file has two parts:
 
 | Part | Field | Description |
 |------|-------|-------------|
-| Frontmatter | `vibe` | Version identifier (required, `"2.0"`) |
+| Frontmatter | `vibe` | Version identifier (required, `"1.0"`) |
 | Frontmatter | `meta` | Document metadata: name, author, status, tags |
 | Frontmatter | `imports` | List of `.vibe.md` files to import and merge |
 | Body | `## Context` | Problem statement, constraints, assumptions (### subheadings) |
@@ -50,7 +50,7 @@ Every `.vibe.md` file has two parts:
 
 ```markdown
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: auth_redesign
   description: Plan the JWT authentication redesign
@@ -172,7 +172,7 @@ See `vibe/spec/VIBE_MCP_SERVER.md` for the full specification.
 The full specification lives under `vibe/spec/`:
 
 **Normative:**
-- `VIBE_SPEC_v2.md` -- Core format specification
+- `VIBE_SPEC_v1.md` -- Core format specification
 - `VIBE_CONSUMER_CONTRACT.md` -- Consumer requirements
 - `VIBE_MERGE_SEMANTICS.md` -- Import and merge rules
 - `VIBE_ERRORS.md` -- Error taxonomy
@@ -203,7 +203,7 @@ vibe/
       risk_assessment.vibe.md
       adr_collection.vibe.md
   spec/                               # Specification documents
-    VIBE_SPEC_v2.md
+    VIBE_SPEC_v1.md
     VIBE_CONSUMER_CONTRACT.md
     VIBE_MERGE_SEMANTICS.md
     ...
@@ -223,7 +223,7 @@ syntaxes/                             # Editor support
 
 ## Status
 
-VIBE v2 specification. The format is designed for AI-driven planning with structured sections, explicit decisions, and measurable quality criteria.
+VIBE v1 specification. The format is designed for AI-driven planning with structured sections, explicit decisions, and measurable quality criteria.
 
 ---
 

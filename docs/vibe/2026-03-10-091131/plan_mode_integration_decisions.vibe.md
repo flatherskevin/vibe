@@ -1,9 +1,9 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: plan_mode_integration_decisions
   description: >
-    Architecture decisions for integrating VIBE v2 as the format layer for
+    Architecture decisions for integrating VIBE v1 as the format layer for
     plan mode output across AI tools and planning frameworks.
   session_id: "2026-03-10-091131"
   created_at: "2026-03-10"
@@ -26,7 +26,7 @@ AI tools (Claude Code, Cursor, Copilot CLI, Windsurf, Roo Code) each have a
 "plan mode" — a read-only planning phase where the agent designs an approach
 before implementing. Planning frameworks (GSD, Superpowers) also produce plan
 artifacts during their planning phases. Currently, plan mode output is ad-hoc
-markdown with no consistent structure. VIBE v2 exists as a structured planning
+markdown with no consistent structure. VIBE v1 exists as a structured planning
 format but is not connected to plan mode in any tool or framework.
 
 ### Scope

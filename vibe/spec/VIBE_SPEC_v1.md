@@ -1,4 +1,4 @@
-# VIBE Specification v2
+# VIBE Specification v1
 
 VIBE defines a **structured document format** for AI-driven planning.
 
@@ -13,16 +13,16 @@ A `.vibe.md` file is a markdown document with YAML frontmatter that captures wha
     |
 Write (AI or human creates document)
     |
-Validate (check against v2 schema)
+Validate (check against v1 schema)
     |
 Review (humans or AI review sections, decisions, quality)
     |
 Import (other documents can import and build on this one)
 ```
 
-A `.vibe.md` document may import other `.vibe.md` documents. Imports are merged by simple field concatenation (not compiled into a Program IR as in v1). Imported content is additive: arrays are concatenated, scalars from the importing document take precedence.
+A `.vibe.md` document may import other `.vibe.md` documents. Imports are merged by simple field concatenation. Imported content is additive: arrays are concatenated, scalars from the importing document take precedence.
 
-VIBE v2 replaces the v1 execution model (`parse -> compile -> plan -> apply -> validate`) with a document-oriented model. There is no runtime, no workflow engine, and no apply phase. Documents are the deliverable.
+VIBE uses a document-oriented model. There is no runtime, no workflow engine, and no apply phase. Documents are the deliverable.
 
 ---
 
@@ -33,7 +33,7 @@ VIBE v2 replaces the v1 execution model (`parse -> compile -> plan -> apply -> v
 Every `.vibe.md` file must begin with a version declaration in the frontmatter:
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 ```
 
 Files must contain valid YAML frontmatter and should validate against `vibe/schema/vibe.schema.json`.
@@ -44,7 +44,7 @@ Files must contain valid YAML frontmatter and should validate against `vibe/sche
 
 | Field | Required | Description |
 |---|---|---|
-| `vibe` | Yes | Version identifier. Must be `2.0`. |
+| `vibe` | Yes | Version identifier. Must be `1.0`. |
 | `meta` | Recommended | Document metadata: name, description, author, status, tags. |
 | `imports` | No | Array of `.vibe.md` file paths to import. |
 | `context` | No | Problem statement, constraints, assumptions, scope, glossary. |
@@ -60,10 +60,10 @@ Files must contain valid YAML frontmatter and should validate against `vibe/sche
 The version field is required at the top level of every `.vibe.md` file.
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 ```
 
-The value must be `2.0`. Documents declaring `1.0` follow the v1 specification and are not valid v2 documents.
+The value must be `1.0`.
 
 ---
 
@@ -117,7 +117,7 @@ imports:
 - Circular imports are errors. A document must not import itself, and no chain of imports may form a cycle.
 - Imported arrays (`artifacts`, `sections`, `decisions`, `quality`) are concatenated with the importing document's arrays.
 - Imported scalar fields (`meta`, `context` subfields) are used only when the importing document does not define them.
-- This is a simple merge, not a compilation step. There is no Program IR in v2.
+- This is a simple merge, not a compilation step.
 
 ---
 
@@ -349,7 +349,7 @@ decisions:
 
 ## quality
 
-Array of quality criteria that define when the planning effort (or its outputs) are considered complete. Quality criteria are the v2 replacement for v1's `validation` section.
+Array of quality criteria that define when the planning effort (or its outputs) are considered complete.
 
 ```yaml
 quality:
@@ -371,7 +371,7 @@ quality:
 
   - id: schema_validation
     type: test
-    description: Document validates against v2 schema
+    description: Document validates against v1 schema
     criteria: |
       This .vibe.md file passes validation against vibe/schema/vibe.schema.json.
 
@@ -405,7 +405,7 @@ quality:
 
 ## Standard Library
 
-VIBE v2 ships a standard library under `vibe/stdlib/`:
+VIBE v1 ships a standard library under `vibe/stdlib/`:
 
 | Module | Purpose |
 |---|---|
@@ -441,7 +441,7 @@ Templates are starting points. Copy and modify them rather than importing direct
 - `VIBE_DOCUMENT_TYPES.md` -- Guidance on common document archetypes and when to use each.
 - `VIBE_DEPENDENCIES.md` -- Artifact and section dependency semantics.
 - `VIBE_AUTHORING_GUIDE.md` -- Guidance for humans and AIs authoring `.vibe.md` documents.
-- `VIBE_REFERENCE_DOCUMENT.md` -- Canonical example document demonstrating all v2 features.
+- `VIBE_REFERENCE_DOCUMENT.md` -- Canonical example document demonstrating all v1 features.
 
 ### Integration (for tooling and multi-agent workflows)
 

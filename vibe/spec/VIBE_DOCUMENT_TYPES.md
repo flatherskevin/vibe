@@ -1,14 +1,14 @@
-# VIBE Document Types (v2.0)
+# VIBE Document Types (v1.0)
 
-This document defines the section types and document archetypes for VIBE v2.
+This document defines the section types and document archetypes for VIBE v1.
 
-In v1, step types described what a runtime *does* (plan, generate, apply, validate). In v2, section types describe what a section *contains*. Document archetypes provide guidance on how to organize .vibe files for different purposes.
+Section types describe what a section *contains*. Document archetypes provide guidance on how to organize .vibe files for different purposes.
 
 ---
 
 ## 1. Section Types
 
-Every section in a .vibe file declares a `type` field. VIBE v2.0 defines six section types.
+Every section in a .vibe file declares a `type` field. VIBE v1.0 defines six section types.
 
 ---
 
@@ -381,7 +381,7 @@ Example:
 
 ## 4. Extensibility Model
 
-The set of section types and quality criteria types is fixed in v2.0.
+The set of section types and quality criteria types is fixed in v1.0.
 
 Six section types: `analysis`, `design`, `decision`, `specification`, `risk`, `checklist`.
 
@@ -389,7 +389,7 @@ Four quality types: `review`, `test`, `metric`, `checklist`.
 
 This set is intentionally small to keep the format learnable by both humans and AI systems. If a section does not fit neatly into one type, use the closest match. The type is guidance for readers, not a constraint on what content may appear.
 
-Custom types are not supported in v2.0. If the community identifies a clear gap, new types can be added in a point release (v2.1, v2.2). Adding a type is backward-compatible because consumers should already handle unknown type values gracefully (treat as generic content).
+Custom types are not supported in v1.0. If the community identifies a clear gap, new types can be added in a point release (v1.1, v1.2). Adding a type is backward-compatible because consumers should already handle unknown type values gracefully (treat as generic content).
 
 The schema enforces type values via an enum. Consumers encountering an unrecognized type value (from a newer schema version) should not reject the document. They should process the section or quality criterion normally and treat the type as informational.
 
@@ -397,7 +397,7 @@ The schema enforces type values via an enum. Consumers encountering an unrecogni
 
 ## 5. Relationship to Other Documents
 
-- `VIBE_SPEC_v2.md` -- Core format specification defining all top-level fields.
+- `VIBE_SPEC_v1.md` -- Core format specification defining all top-level fields.
 - `VIBE_CONSUMER_CONTRACT.md` -- How consumers should parse and interpret these types.
 - `VIBE_AUTHORING_GUIDE.md` -- Guidance on choosing section types and structuring documents.
 - `VIBE_REFERENCE_DOCUMENT.md` -- Canonical example showing section types in use.

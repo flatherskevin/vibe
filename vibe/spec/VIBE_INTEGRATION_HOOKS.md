@@ -1,8 +1,8 @@
-# VIBE Integration Hooks (v2.0)
+# VIBE Integration Hooks (v1.0)
 
 This document defines how external tools integrate with `.vibe` files.
 
-In v1 this document was called Runtime Hooks and defined pre/post execution callbacks. In v2 there is no runtime to hook into. Instead, integration hooks describe how tools consume, validate, and present .vibe documents without executing them.
+Integration hooks describe how tools consume, validate, and present .vibe documents without executing them.
 
 ---
 
@@ -29,7 +29,7 @@ Tools use structured JSON parameters and return structured JSON responses. Schem
 
 The MCP server exposes one prompt:
 
-**plan_in_vibe** -- Instructs the AI to produce output in .vibe v2 format.
+**plan_in_vibe** -- Instructs the AI to produce output in .vibe v1 format.
 
 Arguments:
 
@@ -38,7 +38,7 @@ Arguments:
 
 The prompt returns a system message containing:
 
-- Condensed v2 format specification
+- Condensed v1 format specification
 - Section type reference
 - Document archetype guidance (if document_type is provided)
 - Example document skeleton
@@ -51,7 +51,7 @@ The MCP server exposes read-only resources:
 
 | Resource URI | Content |
 |---|---|
-| `vibe://spec/v2` | Full VIBE v2 specification (text/markdown) |
+| `vibe://spec/v1` | Full VIBE v1 specification (text/markdown) |
 | `vibe://spec/format` | Condensed format reference (text/yaml) |
 | `vibe://templates/overview` | Overview document template (text/yaml) |
 | `vibe://templates/architecture` | Architecture document template (text/yaml) |
@@ -90,7 +90,7 @@ IDEs and editors integrate with .vibe files through standard editor extension me
 
 VIBE provides a TextMate grammar at `syntaxes/vibe.tmLanguage.json` that supports:
 
-- Version line highlighting (`vibe: 2.0`)
+- Version line highlighting (`vibe: 1.0`)
 - Top-level key recognition (`meta`, `imports`, `context`, `artifacts`, `sections`, `decisions`, `quality`)
 - YAML key/value highlighting
 - String, number, and boolean literals
@@ -152,7 +152,7 @@ CI/CD pipelines integrate with .vibe files for quality assurance and change trac
 
 ### 3.1 Schema Validation in Pipelines
 
-A CI job can validate all .vibe files in a repository against the v2 schema:
+A CI job can validate all .vibe files in a repository against the v1 schema:
 
 ```yaml
 # Example GitHub Actions step
@@ -206,7 +206,7 @@ These checks are project-specific and should be configurable.
 
 ### 3.5 Version Consistency
 
-CI can verify that all .vibe files in the repository declare the same `vibe` version. Mixed v1 and v2 files in the same project may indicate an incomplete migration.
+CI can verify that all .vibe files in the repository declare the same `vibe` version.
 
 ---
 
@@ -329,7 +329,7 @@ The VIBE standard library under `vibe/stdlib/` provides importable modules:
 
 ## 6. Relationship to Other Documents
 
-- `VIBE_SPEC_v2.md` -- Core format specification.
+- `VIBE_SPEC_v1.md` -- Core format specification.
 - `VIBE_CONSUMER_CONTRACT.md` -- Consumer requirements that all integrations must follow.
 - `VIBE_MERGE_SEMANTICS.md` -- Merge rules relevant to import resolution.
 - `VIBE_DOCUMENT_TYPES.md` -- Section types and archetypes referenced by MCP prompts and templates.

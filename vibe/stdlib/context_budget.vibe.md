@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: stdlib_context_budget
   description: >
@@ -32,7 +32,7 @@ Max tokens per planning step: ~6000 tokens
 Persistent documents (keep in context):
 - The current .vibe.md document being authored
 - Imported .vibe.md documents referenced by the current document
-- Relevant spec documents (VIBE_SPEC_v2.md at minimum)
+- Relevant spec documents (VIBE_SPEC_v1.md at minimum)
 
 Compactable content (summarize when context is tight):
 - Previous planning iterations

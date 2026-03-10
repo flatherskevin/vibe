@@ -1,8 +1,8 @@
 """MCP resource registrations for VIBE specification and template resources.
 
 Registers:
-- vibe://spec/v2          -- VIBE_SPEC_v2.md (or v1 as fallback)
-- vibe://spec/format      -- Condensed v2 format reference
+- vibe://spec/v1          -- VIBE_SPEC_v1.md
+- vibe://spec/format      -- Condensed v1 format reference
 - vibe://templates/{name} -- One resource per template archetype
 - vibe://stdlib/quality   -- Standard quality criteria library
 """
@@ -51,7 +51,7 @@ def _read_file_safe(path: Path) -> str:
 
 
 _FORMAT_REFERENCE = """\
-# VIBE v2 Condensed Format Reference
+# VIBE v1 Condensed Format Reference
 
 ## File Structure
 Every .vibe.md file is a markdown document with YAML frontmatter.
@@ -60,7 +60,7 @@ It has two parts: frontmatter (between `---` delimiters) and a markdown body.
 ## Frontmatter Fields (YAML between --- delimiters)
 | Field | Required | Type |
 |-------|----------|------|
-| vibe | Yes | string ("2.0") |
+| vibe | Yes | string ("1.0") |
 | meta | No | object |
 | imports | No | array of strings (.vibe.md paths) |
 
@@ -119,16 +119,15 @@ def register_spec_resources(mcp: FastMCP) -> None:
         logger.error("Cannot register spec resources: %s", exc)
         return
 
-    # ---- vibe://spec/v2 ----
-    @mcp.resource("vibe://spec/v2")
-    async def spec_v2() -> str:
-        """The VIBE v2 specification document.
+    # ---- vibe://spec/v1 ----
+    @mcp.resource("vibe://spec/v1")
+    async def spec_v1() -> str:
+        """The VIBE v1 specification document.
 
         Returns the full VIBE specification markdown document that defines
         the .vibe.md file format, frontmatter fields, and document model.
         """
-        # Try v2 spec first, fall back to v1
-        for name in ("VIBE_SPEC_v2.md", "VIBE_SPEC_v1.md"):
+        for name in ("VIBE_SPEC_v1.md",):
             path = vibe_dir / "spec" / name
             if path.exists():
                 return _read_file_safe(path)
@@ -137,9 +136,9 @@ def register_spec_resources(mcp: FastMCP) -> None:
     # ---- vibe://spec/format ----
     @mcp.resource("vibe://spec/format")
     async def spec_format() -> str:
-        """Condensed VIBE v2 format reference.
+        """Condensed VIBE v1 format reference.
 
-        A quick-reference summary of the VIBE v2 .vibe.md document format
+        A quick-reference summary of the VIBE v1 .vibe.md document format
         including frontmatter fields, body sections, and allowed values.
         """
         return _FORMAT_REFERENCE
@@ -178,7 +177,7 @@ def _register_template_resource(
         _path: Path = template_path,
         _name: str = archetype_name,
     ) -> str:
-        f"""VIBE v2 template for {_name} documents.
+        f"""VIBE v1 template for {_name} documents.
 
         A starter template with placeholder sections appropriate for
         creating {_name} planning documents.

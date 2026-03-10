@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: "[system_name]_architecture"
   description: "[Technical architecture for a system or component]"

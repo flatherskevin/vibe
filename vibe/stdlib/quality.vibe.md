@@ -1,9 +1,9 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: stdlib_quality
   description: >
-    Reusable quality criteria library for VIBE v2 documents. Import this
+    Reusable quality criteria library for VIBE v1 documents. Import this
     file and reference these criteria in your document's quality section.
   author: vibe
   tags:
@@ -25,8 +25,8 @@ with document-specific criteria.
 | ID | Type | Description | Criteria |
 |----|------|-------------|----------|
 | stdlib_yaml_valid | test | Document frontmatter is valid YAML | The .vibe.md file's frontmatter parses without YAML syntax errors |
-| stdlib_schema_valid | test | Document validates against v2 schema | The .vibe.md file passes validation against vibe/schema/vibe.schema.json |
-| stdlib_version_present | test | Document declares vibe version 2.0 | The frontmatter vibe field is present and set to "2.0" |
+| stdlib_schema_valid | test | Document validates against v1 schema | The .vibe.md file passes validation against vibe/schema/vibe.schema.json |
+| stdlib_version_present | test | Document declares vibe version 1.0 | The frontmatter vibe field is present and set to "1.0" |
 | stdlib_meta_complete | checklist | Document metadata is complete | meta.name is present and non-empty; meta.description is present and non-empty; meta.status is one of: draft, review, final |
 | stdlib_context_present | review | Document has meaningful context | The Context section includes at least a Problem heading that clearly describes what is being planned or solved |
 | stdlib_sections_complete | review | All sections have substantive content | No section has empty or placeholder-only content. Each section provides meaningful information relevant to its type |

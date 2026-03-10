@@ -1,8 +1,8 @@
-# VIBE Error Taxonomy (v2.0)
+# VIBE Error Taxonomy (v1.0)
 
-This document defines standard error codes for VIBE v2 document validation.
+This document defines standard error codes for VIBE v1 document validation.
 
-VIBE v2 is a document format, not an execution format. Errors in v2 relate to document parsing, schema validation, import resolution, field merging, and MCP server operations -- not runtime execution.
+VIBE v1 is a document format, not an execution format. Errors relate to document parsing, schema validation, import resolution, field merging, and MCP server operations -- not runtime execution.
 
 These codes allow VIBE tooling, validators, MCP servers, and editors to report problems consistently.
 
@@ -56,7 +56,7 @@ Default for: `PARSE_*` errors, `IMPORT_CYCLE`.
 
 ### error
 
-The document has a structural or content problem that must be fixed. The document is parseable but does not conform to the v2 schema or has merge conflicts.
+The document has a structural or content problem that must be fixed. The document is parseable but does not conform to the v1 schema or has merge conflicts.
 
 Default for: `SCHEMA_*` errors, `IMPORT_NOT_FOUND`, `MERGE_*` errors, most `MCP_*` errors.
 
@@ -128,7 +128,7 @@ Example:
 
 ## 4. SCHEMA_* -- Schema Validation Failures
 
-Errors that occur when a parsed .vibe.md document does not conform to the VIBE v2 schema (`vibe/schema/vibe.schema.json`).
+Errors that occur when a parsed .vibe.md document does not conform to the VIBE v1 schema (`vibe/schema/vibe.schema.json`).
 
 ---
 
@@ -191,7 +191,7 @@ Severity: `error`
 
 Causes:
 - Misspelled section type (e.g. `analaysis` instead of `analysis`)
-- Using v1 types not present in v2
+- Using unsupported types
 - Custom types not supported by the schema
 
 Example:
@@ -530,24 +530,3 @@ For VS Code and similar editors, VIBE errors map to diagnostics:
 | `error` | Error (red) |
 | `warning` | Warning (yellow) |
 
----
-
-## 9. Relationship to v1 Errors
-
-VIBE v2 removes the following v1 error categories that related to runtime execution:
-
-- `VIBE_PLAN_OUTPUT_INVALID` (no plan phase)
-- `VIBE_PLAN_MANIFEST_MISSING` (no manifests)
-- `VIBE_PLAN_MANIFEST_INVALID` (no manifests)
-- `VIBE_BUDGET_EXCEEDED` (no execution budgets)
-- `VIBE_TOOL_NOT_ALLOWED` (no tool definitions)
-- `VIBE_TOOL_ARGS_INVALID` (no tool definitions)
-- `VIBE_TOOL_RESULT_INVALID` (no tool definitions)
-- `VIBE_TOOL_FAILURE` (no tool execution)
-- `VIBE_GATE_FAILURE` (no gates)
-- `VIBE_VALIDATION_FAILURE` (no runtime validators)
-- `VIBE_OPERATION_NOT_PERMITTED` (no apply phase)
-- `VIBE_OPERATION_FAILED` (no apply phase)
-- `VIBE_NON_MANIFEST_CHANGE_ATTEMPT` (no manifest enforcement)
-
-VIBE v2 errors focus exclusively on document validity: can this `.vibe` file be parsed, does it conform to the schema, do its imports resolve, and do its fields merge cleanly?

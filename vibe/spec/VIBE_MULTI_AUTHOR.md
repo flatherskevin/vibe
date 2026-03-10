@@ -1,8 +1,8 @@
-# VIBE Multi-Author Patterns (v2.0)
+# VIBE Multi-Author Patterns (v1.0)
 
 This document defines patterns for multiple authors collaborating on `.vibe` planning documents.
 
-VIBE v2 documents are authored by humans, AI systems, or both. This document covers how to identify authors, collaborate within and across sessions, manage document lifecycle, and resolve conflicts.
+VIBE v1 documents are authored by humans, AI systems, or both. This document covers how to identify authors, collaborate within and across sessions, manage document lifecycle, and resolve conflicts.
 
 ---
 
@@ -221,7 +221,7 @@ Using quality criteria to track review approvals makes the review state explicit
 
 ## 5. Conflict Resolution
 
-When two authors edit the same document, conflicts can arise. VIBE v2 handles conflicts at two levels: document-level and field-level.
+When two authors edit the same document, conflicts can arise. VIBE v1 handles conflicts at two levels: document-level and field-level.
 
 ### Document-level conflicts
 
@@ -344,7 +344,7 @@ For teams with established collaboration patterns, create a project-level docume
 
 ```yaml
 # plans/collaboration.vibe
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: collaboration_model

@@ -1,8 +1,8 @@
-# VIBE Merge Semantics (v2.0)
+# VIBE Merge Semantics (v1.0)
 
 This document defines how multiple `.vibe` files are combined when imports are resolved.
 
-In v1, this was the Program IR document, which defined a compiled representation for runtime execution. In v2, there is no compilation step and no IR. Merge is a straightforward field-by-field combination of documents.
+Merge is a straightforward field-by-field combination of documents.
 
 ---
 
@@ -113,7 +113,7 @@ Each top-level field has a specific merge rule. These rules apply when combining
 
 **Rule: root wins.**
 
-The root file's `vibe` version is the version of the merged document. Imported files may declare different versions (for example, a stdlib file might still say `vibe: 2.0`), but the root file's value is authoritative.
+The root file's `vibe` version is the version of the merged document. Imported files may declare different versions (for example, a stdlib file might still say `vibe: 1.0`), but the root file's value is authoritative.
 
 ---
 
@@ -212,7 +212,7 @@ When multiple imported files define the same context key, the later import's val
 **File: vibe/stdlib/quality.vibe**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: stdlib_quality
@@ -227,7 +227,7 @@ quality:
 
   - id: q_schema_valid
     type: test
-    description: Document validates against v2 schema
+    description: Document validates against v1 schema
     criteria: |
       The .vibe file passes validation against vibe.schema.json.
 ```
@@ -235,7 +235,7 @@ quality:
 **File: project.vibe (root)**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: my_project
@@ -266,7 +266,7 @@ quality:
 **Merged Result:**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: my_project
@@ -293,7 +293,7 @@ quality:
 
   - id: q_schema_valid
     type: test
-    description: Document validates against v2 schema
+    description: Document validates against v1 schema
     criteria: |
       The .vibe file passes validation against vibe.schema.json.
 
@@ -319,12 +319,12 @@ Note:
 **File: defaults.vibe**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 context:
   constraints: |
     - All documents must be valid YAML
-    - All documents must declare vibe: 2.0
+    - All documents must declare vibe: 1.0
 
 artifacts:
   - path: docs/overview.md
@@ -342,7 +342,7 @@ decisions:
 **File: project.vibe (root)**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 imports:
   - defaults.vibe
@@ -371,7 +371,7 @@ decisions:
 **Merged Result:**
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 context:
   constraints: |
@@ -408,6 +408,6 @@ Note:
 
 ## 6. Relationship to Other Documents
 
-- `VIBE_SPEC_v2.md` -- Core format specification with field definitions.
+- `VIBE_SPEC_v1.md` -- Core format specification with field definitions.
 - `VIBE_CONSUMER_CONTRACT.md` -- Consumer requirements including import resolution rules.
 - `VIBE_ERRORS.md` -- Error codes for import resolution and merge failures.

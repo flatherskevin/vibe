@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: "[feature_name]_implementation"
   description: "[Detailed implementation plan for a specific change]"

@@ -11,7 +11,7 @@ from src.parsing.vibe_md import parse_vibe_md, serialize_vibe_md
 
 CANONICAL_EXAMPLE = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: auth_service_plan
   description: Plan for implementing JWT authentication service
@@ -98,7 +98,7 @@ The auth system has three components:
 
 MINIMAL_EXAMPLE = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 """
 
@@ -110,7 +110,7 @@ vibe: "2.0"
 class TestFrontmatterParsing:
     def test_parses_vibe_version(self):
         data = parse_vibe_md(CANONICAL_EXAMPLE)
-        assert data["vibe"] == "2.0"
+        assert data["vibe"] == "1.0"
 
     def test_parses_meta(self):
         data = parse_vibe_md(CANONICAL_EXAMPLE)
@@ -125,7 +125,7 @@ class TestFrontmatterParsing:
 
     def test_minimal_document(self):
         data = parse_vibe_md(MINIMAL_EXAMPLE)
-        assert data["vibe"] == "2.0"
+        assert data["vibe"] == "1.0"
         assert "meta" not in data
         assert "context" not in data
 
@@ -134,10 +134,10 @@ class TestFrontmatterParsing:
         assert "vibe" not in data
 
     def test_vibe_as_number(self):
-        """vibe: 2.0 without quotes parses as float -- parser handles both."""
-        text = "---\nvibe: 2.0\n---\n"
+        """vibe: 1.0 without quotes parses as float -- parser handles both."""
+        text = "---\nvibe: 1.0\n---\n"
         data = parse_vibe_md(text)
-        assert data["vibe"] == 2.0
+        assert data["vibe"] == 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +155,7 @@ class TestContextParsing:
     def test_slugifies_heading(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Context
@@ -208,7 +208,7 @@ class TestArtifactsParsing:
     def test_escaped_pipes(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Artifacts
@@ -314,7 +314,7 @@ class TestSerialization:
         data = parse_vibe_md(CANONICAL_EXAMPLE)
         output = serialize_vibe_md(data)
         assert output.startswith("---\n")
-        assert '\nvibe: "2.0"\n' in output
+        assert '\nvibe: "1.0"\n' in output
 
     def test_serialize_produces_body_sections(self):
         data = parse_vibe_md(CANONICAL_EXAMPLE)
@@ -401,7 +401,7 @@ class TestEdgeCases:
     def test_empty_sections(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Context
@@ -411,7 +411,7 @@ vibe: "2.0"
 ## Quality
 """
         data = parse_vibe_md(text)
-        assert data["vibe"] == "2.0"
+        assert data["vibe"] == "1.0"
         # Empty sections should result in empty lists/dicts
         assert data.get("sections", []) == []
         assert data.get("quality", []) == []
@@ -419,7 +419,7 @@ vibe: "2.0"
     def test_missing_optional_fields(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Context
@@ -436,7 +436,7 @@ Just a problem statement.
     def test_table_with_missing_columns(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Artifacts
@@ -453,7 +453,7 @@ vibe: "2.0"
     def test_section_without_comment(self):
         text = """\
 ---
-vibe: "2.0"
+vibe: "1.0"
 ---
 
 ## Sections

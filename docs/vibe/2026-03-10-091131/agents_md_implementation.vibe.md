@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: agents_md_implementation
   description: >
@@ -34,12 +34,12 @@ inconsistent output.
 - AGENTS.md must be tool-agnostic (not CLAUDE.md) since VIBE targets any AI agent
 - AGENTS.md must be self-sufficient: an agent reading only AGENTS.md can produce a valid `.vibe.md` file
 - Session directories must use the `{YYYY-MM-DD}-{6-char-hex}` format from the spec
-- All `.vibe.md` files must have valid YAML frontmatter with `vibe: "2.0"`
+- All `.vibe.md` files must have valid YAML frontmatter with `vibe: "1.0"`
 - This session must bootstrap the convention by producing its own `.vibe.md` files first
 
 ### Assumptions
 
-- The repository already contains the full VIBE v2 spec, authoring guide, stdlib, and templates
+- The repository already contains the full VIBE v1 spec, authoring guide, stdlib, and templates
 - `project.vibe.md` at the root demonstrates valid frontmatter conventions
 - Agents will read AGENTS.md on entry (standard behavior for Claude, Copilot, Cursor, etc.)
 
@@ -53,10 +53,10 @@ inconsistent output.
 | Path | Kind | Description | Status | Depends On | Acceptance Criteria |
 |------|------|-------------|--------|------------|---------------------|
 | AGENTS.md | markdown | Agent instruction file at project root | planned | | Self-sufficient: agent reading only AGENTS.md can produce valid .vibe.md; references spec and template paths correctly |
-| docs/vibe/2026-03-10-091131/agents_md_implementation.vibe.md | vibe | This implementation plan | planned | | Valid frontmatter with vibe: "2.0"; follows implementation_plan template; import path resolves |
-| docs/vibe/2026-03-10-091131/session_bootstrap_decisions.vibe.md | vibe | ADR collection for session decisions | planned | | Valid frontmatter with vibe: "2.0"; follows adr_collection template; records 3 decisions with options and rationale |
-| CLAUDE.md | markdown | Claude Code plan mode instructions with inline VIBE template | planned | AGENTS.md | Contains valid VIBE v2 inline template; references AGENTS.md; includes MCP server note |
-| docs/vibe/2026-03-10-091131/plan_mode_integration_decisions.vibe.md | vibe | ADR collection for plan mode integration decisions | planned | | Valid frontmatter with vibe: "2.0"; records 3 decisions: plan file identity, guidance scope, framework outputs |
+| docs/vibe/2026-03-10-091131/agents_md_implementation.vibe.md | vibe | This implementation plan | planned | | Valid frontmatter with vibe: "1.0"; follows implementation_plan template; import path resolves |
+| docs/vibe/2026-03-10-091131/session_bootstrap_decisions.vibe.md | vibe | ADR collection for session decisions | planned | | Valid frontmatter with vibe: "1.0"; follows adr_collection template; records 3 decisions with options and rationale |
+| CLAUDE.md | markdown | Claude Code plan mode instructions with inline VIBE template | planned | AGENTS.md | Contains valid VIBE v1 inline template; references AGENTS.md; includes MCP server note |
+| docs/vibe/2026-03-10-091131/plan_mode_integration_decisions.vibe.md | vibe | ADR collection for plan mode integration decisions | planned | | Valid frontmatter with vibe: "1.0"; records 3 decisions: plan file identity, guidance scope, framework outputs |
 
 ## Sections
 
@@ -70,7 +70,7 @@ Three files are created, none modified:
 3. **session_bootstrap_decisions.vibe.md** (session dir) — New file in same new directory.
 
 Existing files referenced but not modified:
-- `vibe/spec/VIBE_SPEC_v2.md` — linked from AGENTS.md
+- `vibe/spec/VIBE_SPEC_v1.md` — linked from AGENTS.md
 - `vibe/spec/VIBE_AUTHORING_GUIDE.md` — linked from AGENTS.md
 - `vibe/stdlib/templates/*` — listed in AGENTS.md
 - `vibe/stdlib/quality.vibe.md` — imported by this file
@@ -100,7 +100,7 @@ Existing files referenced but not modified:
 AGENTS.md contains these sections:
 
 1. **Planning Document Format** — What VIBE is (1-2 sentences), links to spec and authoring guide
-2. **File Structure** — Frontmatter requirements (`vibe: "2.0"`, `meta` fields), inline minimal example
+2. **File Structure** — Frontmatter requirements (`vibe: "1.0"`, `meta` fields), inline minimal example
 3. **Session Directory Convention** — `docs/vibe/<session-id>/` with `{YYYY-MM-DD}-{6-char-hex}` format
 4. **Templates** — Table of 5 available templates under `vibe/stdlib/templates/`
 5. **Standard Library** — `quality.vibe.md` and `context_budget.vibe.md`, when to import each
@@ -120,7 +120,7 @@ AGENTS.md contains these sections:
 
 **CLAUDE.md additions:**
 - Plan mode instructions specific to Claude Code
-- Inline minimal VIBE v2 template (frontmatter + Context + Sections + Quality)
+- Inline minimal VIBE v1 template (frontmatter + Context + Sections + Quality)
 - MCP server `plan_in_vibe` prompt reference
 
 **Separation of concerns:**
@@ -149,11 +149,11 @@ AGENTS.md contains these sections:
 ### Verification Steps
 <!-- id: verification, type: checklist -->
 
-- [ ] `docs/vibe/2026-03-10-091131/agents_md_implementation.vibe.md` exists with `vibe: "2.0"` frontmatter
-- [ ] `docs/vibe/2026-03-10-091131/session_bootstrap_decisions.vibe.md` exists with `vibe: "2.0"` frontmatter
+- [ ] `docs/vibe/2026-03-10-091131/agents_md_implementation.vibe.md` exists with `vibe: "1.0"` frontmatter
+- [ ] `docs/vibe/2026-03-10-091131/session_bootstrap_decisions.vibe.md` exists with `vibe: "1.0"` frontmatter
 - [ ] `AGENTS.md` exists at project root
 - [ ] Import `../../../vibe/stdlib/quality.vibe.md` resolves from session directory to existing file
-- [ ] AGENTS.md references `vibe/spec/VIBE_SPEC_v2.md` (exists)
+- [ ] AGENTS.md references `vibe/spec/VIBE_SPEC_v1.md` (exists)
 - [ ] AGENTS.md references `vibe/spec/VIBE_AUTHORING_GUIDE.md` (exists)
 - [ ] AGENTS.md lists all 5 templates under `vibe/stdlib/templates/`
 - [ ] An agent reading only AGENTS.md has enough information to produce a valid `.vibe.md` file
@@ -163,7 +163,7 @@ AGENTS.md contains these sections:
 | ID | Type | Description | Criteria |
 |----|------|-------------|----------|
 | q_all_files_created | checklist | All three planned files exist | AGENTS.md at root, both .vibe.md files in session directory |
-| q_frontmatter_valid | test | Both .vibe.md files have valid YAML frontmatter | Frontmatter parses as valid YAML with vibe: "2.0" and complete meta block |
+| q_frontmatter_valid | test | Both .vibe.md files have valid YAML frontmatter | Frontmatter parses as valid YAML with vibe: "1.0" and complete meta block |
 | q_imports_resolve | test | Import paths resolve to existing files | ../../../vibe/stdlib/quality.vibe.md from session dir resolves to vibe/stdlib/quality.vibe.md |
 | q_agents_md_self_sufficient | review | AGENTS.md is self-sufficient for producing .vibe.md files | An agent reading only AGENTS.md can produce a file with valid frontmatter, typed sections, and quality criteria |
 | q_paths_correct | test | All file path references in AGENTS.md are valid | Every spec, template, and stdlib path referenced in AGENTS.md points to an existing file |

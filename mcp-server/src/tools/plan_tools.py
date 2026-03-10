@@ -111,7 +111,7 @@ def register_plan_tools(mcp: FastMCP) -> None:
         """Read a .vibe.md plan file from a session directory.
 
         Reads the raw content, parses the .vibe.md format, validates against
-        the VIBE v2 schema, and returns all three results.
+        the VIBE v1 schema, and returns all three results.
 
         Args:
             session_id: The session ID containing the plan.

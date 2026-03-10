@@ -1,8 +1,8 @@
-# VIBE Reference Document (v2.0)
+# VIBE Reference Document (v1.0)
 
-This document provides a canonical reference for VIBE v2 planning documents.
+This document provides a canonical reference for VIBE v1 planning documents.
 
-VIBE v2 is a structured YAML document format for AI-driven planning. A `.vibe` file captures what problem is being solved, what will be built, how decisions were made, and what "done" looks like. It is not an execution format.
+VIBE v1 is a structured YAML document format for AI-driven planning. A `.vibe` file captures what problem is being solved, what will be built, how decisions were made, and what "done" looks like. It is not an execution format.
 
 This reference is useful for:
 
@@ -15,7 +15,7 @@ This reference is useful for:
 
 ## 1. Purpose
 
-The reference document demonstrates a realistic planning document that uses all v2 features:
+The reference document demonstrates a realistic planning document that uses all v1 features:
 
 - version declaration
 - document metadata with author, status, and tags
@@ -31,9 +31,9 @@ The reference is intentionally complete, not minimal. It shows how all features 
 
 ---
 
-## 2. Reference Repository Layout (v2)
+## 2. Reference Repository Layout (v1)
 
-Recommended layout for a VIBE v2 project:
+Recommended layout for a VIBE v1 project:
 
 ```
 project.vibe                          # Root document
@@ -49,7 +49,7 @@ vibe/
       risk_assessment.vibe            # Risk assessment template
       adr_collection.vibe             # ADR collection template
   spec/
-    VIBE_SPEC_v2.md                   # Core specification
+    VIBE_SPEC_v1.md                   # Core specification
     VIBE_REFERENCE_DOCUMENT.md        # This file
     VIBE_AUTHORING_GUIDE.md           # Authoring guidance
     VIBE_ERRORS.md                    # Error taxonomy
@@ -62,21 +62,14 @@ syntaxes/
   vibe.tmLanguage.json                # Syntax highlighting
 ```
 
-Key differences from v1 layout:
-
-- No `tools.vibe`, `gates.vibe`, or `plan_manifest_schema.vibe` (execution concepts removed)
-- `quality.vibe` replaces `validators.vibe` as the primary stdlib import
-- `templates/` directory provides starter documents for common planning patterns
-- No `spec/` output directory (no plan manifest, no runlog)
-
 ---
 
 ## 3. Reference `.vibe` Document
 
-The following is a complete, realistic planning document for an API feature. It demonstrates all v2 fields.
+The following is a complete, realistic planning document for an API feature. It demonstrates all v1 fields.
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: user_notifications_api
@@ -435,14 +428,14 @@ quality:
 
 ## 4. Import Example
 
-VIBE v2 documents compose via imports. When a document imports another, the imported fields are merged into the importing document.
+VIBE v1 documents compose via imports. When a document imports another, the imported fields are merged into the importing document.
 
 ### Simple import
 
 A planning document imports standard quality criteria:
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: my_feature_plan
@@ -460,7 +453,7 @@ A large initiative might be split across documents:
 
 ```yaml
 # initiative_plan.vibe
-vibe: 2.0
+vibe: 1.0
 
 meta:
   name: q4_initiative
@@ -506,7 +499,7 @@ This enables building on prior planning work across sessions.
 
 ## 5. Document Lifecycle
 
-Every VIBE v2 document has a `meta.status` field that tracks its position in the authoring lifecycle.
+Every VIBE v1 document has a `meta.status` field that tracks its position in the authoring lifecycle.
 
 ### draft
 
@@ -568,7 +561,7 @@ A document may move back from `review` to `draft` if revisions are needed. Movin
 
 ## 6. What This Reference Teaches
 
-This reference demonstrates five core VIBE v2 practices:
+This reference demonstrates five core VIBE v1 practices:
 
 ### 6.1 Context first
 
@@ -598,7 +591,7 @@ This file is a teaching and reference document.
 
 For the normative specification, see:
 
-- `VIBE_SPEC_v2.md` -- Core language specification
+- `VIBE_SPEC_v1.md` -- Core language specification
 
 For authoring guidance, see:
 

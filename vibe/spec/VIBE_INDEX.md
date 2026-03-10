@@ -1,14 +1,14 @@
-# VIBE v2 Index
+# VIBE v1 Index
 
-This folder contains the specification and guidance documents for VIBE v2.
+This folder contains the specification and guidance documents for VIBE v1.
 
-VIBE v2 is a structured YAML document format for AI-driven planning. It defines how planning documents are written, validated, imported, and consumed.
+VIBE v1 is a structured YAML document format for AI-driven planning. It defines how planning documents are written, validated, imported, and consumed.
 
 ---
 
 ## Normative Documents (consumers MUST follow)
 
-- **VIBE_SPEC_v2.md**
+- **VIBE_SPEC_v1.md**
   Format overview and core concepts. Defines the `.vibe` file format, top-level fields, section types, and the document model.
 
 - **VIBE_CONSUMER_CONTRACT.md**
@@ -34,7 +34,7 @@ VIBE v2 is a structured YAML document format for AI-driven planning. It defines 
   Guidance for writing `.vibe` documents. Best practices for humans and AI systems authoring planning documents, including section structure, quality criteria, and common pitfalls.
 
 - **VIBE_REFERENCE_DOCUMENT.md**
-  Canonical example document. A complete, annotated `.vibe` document demonstrating all v2 features. Useful for learning, testing, and as a template.
+  Canonical example document. A complete, annotated `.vibe` document demonstrating all v1 features. Useful for learning, testing, and as a template.
 
 - **VIBE_INTEGRATION_HOOKS.md**
   External tool integration. Patterns for integrating VIBE documents with CI/CD systems, code review tools, project management tools, and other external systems.
@@ -67,15 +67,15 @@ The standard library provides reusable modules imported by `.vibe` documents.
 
 ---
 
-## Completeness Checklist (v2)
+## Completeness Checklist (v1)
 
-A repository is "VIBE v2 complete" when it includes:
+A repository is "VIBE v1 complete" when it includes:
 
 **Required:**
 
-- Root document: `project.vibe` with `vibe: 2.0`
+- Root document: `project.vibe` with `vibe: 1.0`
 - JSON Schema: `vibe/schema/vibe.schema.json`
-- Core spec: `vibe/spec/VIBE_SPEC_v2.md`
+- Core spec: `vibe/spec/VIBE_SPEC_v1.md`
 - Consumer contract: `vibe/spec/VIBE_CONSUMER_CONTRACT.md`
 - Merge semantics: `vibe/spec/VIBE_MERGE_SEMANTICS.md`
 - Error taxonomy: `vibe/spec/VIBE_ERRORS.md`
@@ -99,21 +99,3 @@ A repository is "VIBE v2 complete" when it includes:
 - Syntax highlighting: `syntaxes/vibe.tmLanguage.json`
 - VS Code settings: `.vscode/settings.json`
 
----
-
-## Changes from v1
-
-VIBE v2 is a document format, not an execution format. Key changes from the v1 index:
-
-| v1 Concept | v2 Equivalent |
-|---|---|
-| Runtime Contract | Consumer Contract |
-| Program IR | Merge Semantics |
-| Step Types | Document Types (section types and archetypes) |
-| Runtime Hooks | Integration Hooks |
-| Subagents | Multi-Author collaboration |
-| tools.vibe, gates.vibe | Removed (no execution) |
-| validators.vibe | quality.vibe (quality criteria, not runtime validators) |
-| plan_manifest_schema.vibe | Removed (no manifest-driven execution) |
-
-The standard library is smaller in v2 because VIBE no longer defines execution primitives. It focuses on reusable planning content: quality criteria, context management, and document templates.

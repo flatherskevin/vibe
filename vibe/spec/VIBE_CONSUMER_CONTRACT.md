@@ -1,8 +1,8 @@
-# VIBE Consumer Contract (v2.0)
+# VIBE Consumer Contract (v1.0)
 
 This document defines the required and recommended behaviors for any system that reads `.vibe.md` files.
 
-In v1 this document was called the Runtime Contract and defined execution semantics. In v2 there is no runtime. Instead, this document specifies how consumers -- humans, AI systems, IDEs, CI pipelines, and other tools -- should parse, validate, and interpret VIBE documents.
+This document specifies how consumers -- humans, AI systems, IDEs, CI pipelines, and other tools -- should parse, validate, and interpret VIBE documents.
 
 ---
 
@@ -42,12 +42,12 @@ Indentation MUST use spaces. Tabs are not permitted. Consumers SHOULD reject fil
 Every `.vibe.md` file MUST begin with a `vibe` field at the top level of the YAML frontmatter.
 
 ```yaml
-vibe: 2.0
+vibe: 1.0
 ```
 
-Consumers MUST check this field before processing. A v2 consumer encountering `vibe: 1.0` SHOULD reject the file or warn that it is an incompatible version. Consumers MAY support both versions, but MUST NOT apply v2 merge rules to v1 files or vice versa.
+Consumers MUST check this field before processing. A consumer encountering an unrecognized version SHOULD reject the file or warn that it is an incompatible version.
 
-The `vibe` field accepts both string (`"2.0"`) and number (`2.0`) values. Consumers MUST normalize both representations to the same version identifier.
+The `vibe` field accepts both string (`"1.0"`) and number (`1.0`) values. Consumers MUST normalize both representations to the same version identifier.
 
 ### 2.5 Duplicate Keys
 
@@ -235,7 +235,7 @@ Criteria that define "done" for the document or its artifacts. Consumers should 
 
 ### 6.1 Schema Validation
 
-VIBE v2 provides a JSON Schema at `vibe/schema/vibe.schema.json`. Consumers SHOULD validate .vibe.md files against this schema.
+VIBE v1 provides a JSON Schema at `vibe/schema/vibe.schema.json`. Consumers SHOULD validate .vibe.md files against this schema.
 
 Schema validation checks:
 
@@ -312,7 +312,7 @@ These limits are recommendations. Consumers should document their limits.
 
 ## 8. Relationship to Other Documents
 
-- `VIBE_SPEC_v2.md` -- Core format specification with field definitions.
+- `VIBE_SPEC_v1.md` -- Core format specification with field definitions.
 - `VIBE_MERGE_SEMANTICS.md` -- Detailed merge rules and examples.
 - `VIBE_DOCUMENT_TYPES.md` -- Section type and quality type definitions.
 - `VIBE_ERRORS.md` -- Error codes for parse, schema, and import failures.

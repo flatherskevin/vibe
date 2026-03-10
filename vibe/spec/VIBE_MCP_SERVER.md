@@ -2,7 +2,7 @@
 
 Local MCP server for creating and managing `.vibe` planning documents.
 
-The VIBE MCP server provides a Model Context Protocol interface for AI agents and tools to create, read, validate, and manage `.vibe` planning sessions. It is the recommended integration path for AI systems that produce or consume VIBE v2 documents.
+The VIBE MCP server provides a Model Context Protocol interface for AI agents and tools to create, read, validate, and manage `.vibe` planning sessions. It is the recommended integration path for AI systems that produce or consume VIBE v1 documents.
 
 ---
 
@@ -14,7 +14,7 @@ It provides:
 
 - session-based document management
 - YAML parsing and schema validation
-- access to the VIBE v2 spec, format reference, and templates
+- access to the VIBE v1 spec, format reference, and templates
 - a structured error model for all failure modes
 
 The server does not execute plans. It creates, validates, and organizes planning documents.
@@ -172,8 +172,8 @@ Reads a `.vibe` document from a session and returns both raw and parsed content.
 
 ```json
 {
-  "content": "vibe: 2.0\nmeta:\n  name: ...",
-  "parsed": { "vibe": "2.0", "meta": { "name": "..." } },
+  "content": "vibe: 1.0\nmeta:\n  name: ...",
+  "parsed": { "vibe": "1.0", "meta": { "name": "..." } },
   "valid": true
 }
 ```
@@ -311,12 +311,12 @@ A prompt template that guides AI agents through creating a `.vibe` planning docu
 
 The prompt assembles context from:
 
-1. The VIBE v2 format reference (`vibe://spec/format`)
+1. The VIBE v1 format reference (`vibe://spec/format`)
 2. The relevant archetype template if `document_type` is provided (`vibe://templates/{archetype}`)
 3. Quality criteria from the standard library (`vibe://stdlib/quality`)
 4. The current session state if `session_id` is provided
 
-The assembled prompt instructs the AI agent to produce a valid `.vibe` document that includes the required `vibe: 2.0` header, `meta` block, and appropriate sections for the document type.
+The assembled prompt instructs the AI agent to produce a valid `.vibe` document that includes the required `vibe: 1.0` header, `meta` block, and appropriate sections for the document type.
 
 ---
 
@@ -324,9 +324,9 @@ The assembled prompt instructs the AI agent to produce a valid `.vibe` document 
 
 The server exposes the following MCP resources.
 
-### 5.1 `vibe://spec/v2`
+### 5.1 `vibe://spec/v1`
 
-The full VIBE v2 specification (`VIBE_SPEC_v2.md`).
+The full VIBE v1 specification (`VIBE_SPEC_v1.md`).
 
 Use this resource when an agent needs the normative spec for authoring or validating documents.
 
@@ -490,7 +490,7 @@ The VIBE MCP server is a document management tool, not an execution engine.
 It exists to:
 
 - give AI agents a structured way to create and organize planning documents
-- validate documents against the VIBE v2 schema as they are written
+- validate documents against the VIBE v1 schema as they are written
 - provide access to the spec, templates, and quality criteria as MCP resources
 - manage planning sessions as lightweight, filesystem-based workspaces
 

@@ -1,7 +1,7 @@
 {
   "name": "vibe-lang-highlighter",
   "displayName": "VIBE Language Support",
-  "description": "Syntax highlighting and editor config for .vibe.md files (VIBE v2).",
+  "description": "Syntax highlighting and editor config for .vibe.md files (VIBE v1).",
   "version": "0.1.0",
   "publisher": "vibe",
   "engines": {

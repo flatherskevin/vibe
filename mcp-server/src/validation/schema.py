@@ -1,6 +1,6 @@
 """VIBE schema validation.
 
-Loads the VIBE v2 JSON Schema at startup and validates dicts against it
+Loads the VIBE v1 JSON Schema at startup and validates dicts against it
 using jsonschema.
 """
 
@@ -81,7 +81,7 @@ def get_schema_load_error() -> str | None:
 
 
 def validate_document(data: dict[str, Any]) -> tuple[bool, list[str]]:
-    """Validate a parsed VIBE document against the v2 schema.
+    """Validate a parsed VIBE document against the v1 schema.
 
     Returns:
         A tuple of (is_valid, errors) where errors is a list of

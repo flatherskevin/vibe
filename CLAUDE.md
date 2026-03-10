@@ -6,13 +6,13 @@ Follow the instructions in `AGENTS.md` strictly.
 
 ## Plan Mode
 
-When in plan mode (activated via Shift+Tab or mode toggle), the plan file content must be valid VIBE v2. The tool provides the plan file path; you provide VIBE-formatted content.
+When in plan mode (activated via Shift+Tab or mode toggle), the plan file content must be valid VIBE v1. The tool provides the plan file path; you provide VIBE-formatted content.
 
 Use this minimal template for plan mode output:
 
 ```yaml
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: plan_name_here
   description: "One-line description of what this plan covers"

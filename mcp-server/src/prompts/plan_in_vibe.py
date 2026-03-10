@@ -1,6 +1,6 @@
 """MCP prompt registration for the plan_in_vibe prompt.
 
-Provides a system prompt with VIBE v2 .vibe.md format specification,
+Provides a system prompt with VIBE v1 .vibe.md format specification,
 section types, and an example document.
 """
 
@@ -11,10 +11,10 @@ from mcp.server.fastmcp import FastMCP
 logger = logging.getLogger(__name__)
 
 
-_VIBE_V2_FORMAT_SPEC = """\
-# VIBE v2 Format Reference
+_VIBE_V1_FORMAT_SPEC = """\
+# VIBE v1 Format Reference
 
-VIBE v2 is a structured markdown document format for AI-driven planning.
+VIBE v1 is a structured markdown document format for AI-driven planning.
 Every .vibe.md file has two parts:
 
 1. **YAML frontmatter** (between `---` delimiters) containing `vibe`, `meta`, and `imports`
@@ -23,7 +23,7 @@ Every .vibe.md file has two parts:
 ## Frontmatter (YAML between --- delimiters)
 
 ### Required
-- `vibe: "2.0"` -- Version declaration (quoted to avoid numeric coercion)
+- `vibe: "1.0"` -- Version declaration (quoted to avoid numeric coercion)
 
 ### Optional
 - `meta` -- Document metadata:
@@ -78,11 +78,11 @@ _SECTION_TYPES = """\
 """
 
 _EXAMPLE_DOCUMENT = """\
-## Example VIBE v2 Document
+## Example VIBE v1 Document
 
 ```markdown
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: auth_service_plan
   description: Plan for implementing JWT authentication service
@@ -184,9 +184,9 @@ def register_plan_in_vibe_prompt(mcp: FastMCP) -> None:
         document_type: str = "implementation_plan",
         session_id: str = "",
     ) -> str:
-        """Generate a system prompt for creating a VIBE v2 planning document.
+        """Generate a system prompt for creating a VIBE v1 planning document.
 
-        This prompt provides the complete VIBE v2 .vibe.md format specification,
+        This prompt provides the complete VIBE v1 .vibe.md format specification,
         section type reference, and an example document to guide AI-driven
         plan authoring.
 
@@ -206,16 +206,16 @@ def register_plan_in_vibe_prompt(mcp: FastMCP) -> None:
         document_type_guidance = _get_document_type_guidance(document_type)
 
         return (
-            f"You are a planning assistant that writes structured VIBE v2 documents.\n\n"
-            f"Your task is to create a **{document_type}** document in VIBE v2 .vibe.md format.\n"
+            f"You are a planning assistant that writes structured VIBE v1 documents.\n\n"
+            f"Your task is to create a **{document_type}** document in VIBE v1 .vibe.md format.\n"
             f"{session_note}\n"
-            f"{_VIBE_V2_FORMAT_SPEC}\n"
+            f"{_VIBE_V1_FORMAT_SPEC}\n"
             f"{_SECTION_TYPES}\n"
             f"{document_type_guidance}\n"
             f"{_EXAMPLE_DOCUMENT}\n"
             f"## Instructions\n\n"
             f"1. Write as a .vibe.md file with YAML frontmatter (between --- delimiters) "
-            f"containing `vibe: \"2.0\"`, `meta`, and optionally `imports`.\n"
+            f"containing `vibe: \"1.0\"`, `meta`, and optionally `imports`.\n"
             f"2. Fill in all relevant body sections (Context, Artifacts, Sections, Decisions, Quality) "
             f"with substantive content -- no placeholders.\n"
             f"3. Use appropriate section types in <!-- --> comments for each section.\n"
@@ -282,7 +282,7 @@ def _get_document_type_guidance(document_type: str) -> str:
         document_type,
         (
             f"## Document Type: {document_type}\n\n"
-            f"Create a VIBE v2 document appropriate for the '{document_type}' "
+            f"Create a VIBE v1 document appropriate for the '{document_type}' "
             f"document type. Use section types that best fit the content.\n"
         ),
     )

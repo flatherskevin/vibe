@@ -407,7 +407,7 @@ def serialize_vibe_md(data: dict[str, Any]) -> str:
 
     fm_yaml = yaml.dump(fm, default_flow_style=False, sort_keys=False, allow_unicode=True).strip()
     # Ensure vibe value is double-quoted as string to avoid numeric coercion
-    # Handles: vibe: 2.0 (unquoted) and vibe: '2.0' (single-quoted from yaml.dump)
+    # Handles: vibe: 1.0 (unquoted) and vibe: '1.0' (single-quoted from yaml.dump)
     fm_yaml = re.sub(r"^(vibe:\s*)'?(\d+\.\d+)'?\s*$", r'\1"\2"', fm_yaml, flags=re.MULTILINE)
     parts.append(f"---\n{fm_yaml}\n---")
 

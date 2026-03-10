@@ -28,10 +28,10 @@ class TestConvertedFiles:
         assert "vibe" in data, f"{vibe_md_file.name} missing 'vibe' field"
 
     def test_vibe_version(self, vibe_md_file):
-        """Every .vibe.md file should declare vibe 2.0."""
+        """Every .vibe.md file should declare vibe 1.0."""
         text = vibe_md_file.read_text(encoding="utf-8")
         data = parse_vibe_md(text)
-        assert str(data["vibe"]) == "2.0"
+        assert str(data["vibe"]) == "1.0"
 
     def test_round_trip_stable(self, vibe_md_file):
         """parse(serialize(parse(text))) should equal parse(text) for each file."""

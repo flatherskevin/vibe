@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: "[subject]_risk_assessment"
   description: "[Comprehensive risk analysis for a project, system, or decision]"

@@ -1,6 +1,6 @@
-# VIBE Dependencies (v2)
+# VIBE Dependencies (v1)
 
-Dependencies in VIBE v2 express ordering relationships between artifacts and between sections within a document.
+Dependencies in VIBE v1 express ordering relationships between artifacts and between sections within a document.
 
 Dependencies are a design-time concept. They tell AI planners and human reviewers what must logically come before what. They do not trigger execution or runtime resolution.
 
@@ -15,7 +15,7 @@ Dependencies make ordering explicit for:
 - validation tools checking that referenced content exists
 - consumers processing documents in a coherent sequence
 
-In v1, dependencies were tied to runtime execution order. In v2, dependencies express logical precedence: "this artifact builds on that one" or "this section assumes that section has been read."
+Dependencies express logical precedence: "this artifact builds on that one" or "this section assumes that section has been read."
 
 ---
 
@@ -370,4 +370,4 @@ Without dependencies, the ordering of artifacts and sections is implicit -- dete
 
 Dependencies make ordering a first-class, machine-verifiable property of VIBE documents. They answer the question "what should I read or write first?" without requiring execution machinery.
 
-In VIBE v2, dependencies are a planning tool, not an execution mechanism. They guide the order of thought, not the order of commands.
+In VIBE v1, dependencies are a planning tool, not an execution mechanism. They guide the order of thought, not the order of commands.

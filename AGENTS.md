@@ -6,9 +6,9 @@ Instructions for AI agents working in this repository.
 
 ## Planning Document Format
 
-This project uses **VIBE v2**, a structured document format for AI-driven planning. When planning work in this repository, produce `.vibe.md` files — markdown documents with YAML frontmatter that capture what problem is being solved, what will be built or changed, how it was reasoned about, and what "done" looks like. This applies to **plan mode** output as well — see "Plan Mode Integration" below.
+This project uses **VIBE v1**, a structured document format for AI-driven planning. When planning work in this repository, produce `.vibe.md` files — markdown documents with YAML frontmatter that capture what problem is being solved, what will be built or changed, how it was reasoned about, and what "done" looks like. This applies to **plan mode** output as well — see "Plan Mode Integration" below.
 
-- **Full specification:** `vibe/spec/VIBE_SPEC_v2.md`
+- **Full specification:** `vibe/spec/VIBE_SPEC_v1.md`
 - **Authoring guide:** `vibe/spec/VIBE_AUTHORING_GUIDE.md`
 - **Root project document:** `project.vibe.md`
 
@@ -16,17 +16,17 @@ This project uses **VIBE v2**, a structured document format for AI-driven planni
 
 ## Plan Mode Integration
 
-VIBE is a **format**, not a framework. Frameworks (GSD, Superpowers, etc.) define process; VIBE defines output shape. When any tool or framework enters its planning phase, the plan output should be structured as a VIBE v2 document.
+VIBE is a **format**, not a framework. Frameworks (GSD, Superpowers, etc.) define process; VIBE defines output shape. When any tool or framework enters its planning phase, the plan output should be structured as a VIBE v1 document.
 
 ### When to produce VIBE documents
 
-- **Plan mode activation** — When a tool enters a read-only planning phase (e.g., Shift+Tab in Claude Code), the plan file content must be valid VIBE v2.
+- **Plan mode activation** — When a tool enters a read-only planning phase (e.g., Shift+Tab in Claude Code), the plan file content must be valid VIBE v1.
 - **Framework plan phases** — When a planning framework (GSD, Superpowers, etc.) produces a plan or design artifact, that artifact uses VIBE format.
 - **Writing to a tool's plan file** — When an agent writes to a tool-specific plan file path, the content is VIBE-formatted regardless of the path.
 
 ### Tool plan files
 
-Each tool stores plan files in its own location. The content is always VIBE v2:
+Each tool stores plan files in its own location. The content is always VIBE v1:
 
 | Tool | Plan file location | Notes |
 |------|-------------------|-------|
@@ -59,11 +59,11 @@ Frameworks define process. VIBE defines the shape of plan outputs within that pr
 
 ## File Structure
 
-Every `.vibe.md` file must begin with YAML frontmatter containing `vibe: "2.0"` and a `meta` block:
+Every `.vibe.md` file must begin with YAML frontmatter containing `vibe: "1.0"` and a `meta` block:
 
 ```yaml
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: feature_name_plan
   description: "What this document plans or decides"
@@ -80,7 +80,7 @@ imports:
 ```
 
 **Required fields:**
-- `vibe` — Must be `"2.0"`
+- `vibe` — Must be `"1.0"`
 - `meta.name` — snake_case document identifier
 - `meta.description` — Human-readable summary
 - `meta.status` — One of: `draft`, `review`, `final`

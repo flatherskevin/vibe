@@ -1,8 +1,8 @@
-# VIBE Authoring Guide (v2.0)
+# VIBE Authoring Guide (v1.0)
 
 Guide for writing effective `.vibe` planning documents.
 
-VIBE v2 is a structured YAML document format for AI-driven planning. This guide covers how to write documents that are clear, complete, and useful for both human reviewers and AI systems.
+VIBE v1 is a structured YAML document format for AI-driven planning. This guide covers how to write documents that are clear, complete, and useful for both human reviewers and AI systems.
 
 ---
 
@@ -38,7 +38,7 @@ vibe/
       risk_assessment.vibe
       adr_collection.vibe
   spec/                               # Specification documents
-    VIBE_SPEC_v2.md
+    VIBE_SPEC_v1.md
     VIBE_REFERENCE_DOCUMENT.md
     VIBE_AUTHORING_GUIDE.md
     VIBE_ERRORS.md
@@ -429,7 +429,7 @@ Fix: Import shared content from stdlib or shared documents. Only add project-spe
 When asking an AI to create a `.vibe` document:
 
 ```
-Create a VIBE v2 planning document for [feature/initiative].
+Create a VIBE v1 planning document for [feature/initiative].
 
 Requirements:
 - Start with context: problem, constraints, assumptions, scope

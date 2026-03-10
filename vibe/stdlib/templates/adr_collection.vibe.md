@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: "[project_name]_decisions"
   description: "[Collection of architectural decisions for a project or initiative]"

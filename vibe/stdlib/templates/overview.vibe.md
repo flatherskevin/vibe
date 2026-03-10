@@ -1,5 +1,5 @@
 ---
-vibe: "2.0"
+vibe: "1.0"
 meta:
   name: "[project_name]_overview"
   description: "[High-level overview of the project or initiative]"

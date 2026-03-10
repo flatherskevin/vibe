@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://vibe-lang.org/schema/v2",
+  "$id": "https://vibe-lang.org/schema/v1",
   "title": "VIBE Document",
-  "description": "Schema for VIBE v2 document files (.vibe.md). Validates the parsed dict representation, whether sourced from YAML frontmatter + markdown body or pure YAML.",
+  "description": "Schema for VIBE v1 document files (.vibe.md). Validates the parsed dict representation, whether sourced from YAML frontmatter + markdown body or pure YAML.",
   "type": "object",
   "required": ["vibe"],
   "properties": {
     "vibe": {
       "type": ["string", "number"],
-      "description": "VIBE version identifier (must be 2.0)"
+      "description": "VIBE version identifier (must be 1.0)"
     },
 
     "meta": {
