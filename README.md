@@ -1,254 +1,231 @@
 # VIBE
 
-**VIBE is a compiled specification format for AI software work.**
+**VIBE is a structured document format for AI-driven planning.**
 
-Modern AI workflows generate large amounts of planning artifacts:
-
-- markdown plans
-- research documents
-- task breakdowns
-- architecture notes
-- AI conversation outputs
-- issue lists
-- PRDs
-
-These artifacts are **useful for humans**, but **unreliable as execution contracts** for AI systems.
-
-They are ambiguous, inconsistent, and difficult to validate.
-
-VIBE solves this problem by acting as a **compile target**.
-
-Instead of letting AI systems directly execute markdown plans, those plans are **compiled into `.vibe` files**, which become a **structured contract describing the intended work.**
+A `.vibe` file is a YAML document that captures what problem is being solved, what will be built, how decisions were made, and what "done" looks like. VIBE documents are the output of AI planning -- consumed by humans reviewing plans, other AI agents continuing work, and execution tools that need structured instructions.
 
 ---
 
-# Core Idea
+## What VIBE Does
+
+VIBE provides a structured medium for planning:
 
 ```
-Natural Language
-        ↓
-Research / Planning Tools
-        ↓
-Markdown Artifacts
-        ↓
-AI Compiler
-        ↓
-.vibe
-        ↓
-Execution System
+AI system plans
+    ↓
+.vibe document (write)
+    ↓
+Schema validation (validate)
+    ↓
+Human/AI review (review)
+    ↓
+Imported by other plans (import)
 ```
 
-VIBE does **not** perform planning.
-
-VIBE does **not** perform execution.
-
-VIBE exists as the **normalized interface between them.**
+Instead of ad-hoc markdown, AI systems produce `.vibe` documents with typed sections, explicit decisions, and measurable quality criteria.
 
 ---
 
-# Why VIBE Exists
+## Document Structure
 
-AI systems are excellent at exploration and planning, but poor at:
+Every `.vibe` file starts with a version declaration and uses these top-level fields:
 
-- maintaining deterministic structure
-- respecting execution scope
-- producing stable machine-readable contracts
-
-Markdown plans drift over time and become unreliable.
-
-VIBE introduces a **compiled specification layer** that transforms messy planning artifacts into a **structured, validated contract**.
-
-This allows execution systems to operate with **deterministic inputs**.
-
----
-
-# What a `.vibe` File Represents
-
-A `.vibe` file is the **compiled representation of intended work**.
-
-It may include:
-
-- metadata
-- source artifacts used during compilation
-- scoped files and directories
-- required outputs
-- transformations
-- constraints
-- validation rules
-- execution intent
-
-Execution systems may interpret `.vibe` however they choose.
-
-VIBE simply guarantees that the **intent is normalized and structured.**
+| Field | Description |
+|---|---|
+| `vibe` | Version identifier (required, `2.0`) |
+| `meta` | Document metadata: name, author, status, tags |
+| `imports` | List of `.vibe` files to import and merge |
+| `context` | Problem statement, constraints, assumptions, scope |
+| `artifacts` | File declarations with acceptance criteria |
+| `sections` | Typed content blocks (analysis, design, specification, risk, checklist, decision) |
+| `decisions` | Architecture Decision Records with options and rationale |
+| `quality` | Criteria that define "done" |
 
 ---
 
-# Example
-
-Source planning artifacts:
-
-```
-docs/plan.md
-docs/architecture.md
-docs/tasks.md
-```
-
-Compiled output:
-
-```
-build_feature.vibe
-```
-
-Example `.vibe` file:
+## Example
 
 ```yaml
+vibe: 2.0
+
 meta:
-  name: implement-authentication
-  version: 1
+  name: auth_redesign
+  description: Plan the JWT authentication redesign
+  author: claude
+  tags:
+    - auth
+    - backend
+  status: draft
 
-sources:
-  - docs/plan.md
-  - docs/architecture.md
-  - docs/tasks.md
+imports:
+  - vibe/stdlib/quality.vibe
 
-scope:
-  include:
-    - src/auth/**
-    - tests/auth/**
-  exclude:
-    - migrations/**
+context:
+  problem: |
+    The current session-based auth doesn't support mobile clients.
+  constraints: |
+    - Must be backward compatible with existing web sessions.
+    - Must support token refresh without re-authentication.
 
 artifacts:
-  outputs:
-    - src/auth/service.py
-    - src/auth/routes.py
-    - tests/auth/test_auth.py
+  - path: src/auth/jwt_service.py
+    kind: python
+    description: JWT token issuance and validation
+    status: planned
+    acceptance_criteria:
+      - Issues access tokens with 15-minute expiry
+      - Validates tokens against signing key
 
-constraints:
-  language: python
-  framework: fastapi
+sections:
+  - id: current_state
+    type: analysis
+    title: Current Authentication State
+    content: |
+      The existing system uses server-side sessions stored in Redis.
+      Mobile clients cannot maintain session cookies reliably.
 
-validation:
-  tests_required: true
-  lint_required: true
+  - id: proposed_design
+    type: design
+    title: JWT Token Architecture
+    content: |
+      Replace session-based auth with JWT access/refresh token pair.
+      Access tokens are short-lived (15 min). Refresh tokens are
+      long-lived (7 days) and stored in HttpOnly cookies.
+
+decisions:
+  - id: dec_token_storage
+    title: Store refresh tokens in HttpOnly cookies
+    status: proposed
+    context: |
+      Refresh tokens need secure client-side storage.
+    options:
+      - name: local_storage
+        description: Store in localStorage (XSS vulnerable)
+      - name: httponly_cookie
+        description: Store in HttpOnly cookie (CSRF requires mitigation)
+    chosen: httponly_cookie
+    rationale: |
+      HttpOnly cookies are not accessible to JavaScript, preventing
+      XSS-based token theft. CSRF is mitigated with SameSite=Strict.
+    consequences:
+      - Requires CSRF mitigation for cookie-based endpoints
+      - Mobile clients use Authorization header instead
+
+quality:
+  - id: q_tokens_valid
+    type: test
+    description: JWT tokens are correctly issued and validated
+    criteria: |
+      Access tokens contain user ID, expiry, and valid signature.
+      Expired tokens are rejected. Invalid signatures are rejected.
 ```
 
 ---
 
-# Design Principles
+## Standard Library
 
-### 1. Compile, Don't Plan
+VIBE ships a standard library under `vibe/stdlib/`:
 
-Planning should happen in external systems.
-
-VIBE exists only as the **compiled contract**.
-
----
-
-### 2. Deterministic Structure
-
-`.vibe` files are designed to be:
-
-- machine readable
-- schema validated
-- predictable for AI systems
+- **quality.vibe** -- Reusable quality criteria (import to get standard checks)
+- **context_budget.vibe** -- Context budgeting guidance for AI planning sessions
+- **templates/** -- Document templates for common planning patterns:
+  - `overview.vibe` -- Project overview
+  - `architecture.vibe` -- Technical architecture
+  - `implementation_plan.vibe` -- Implementation planning
+  - `risk_assessment.vibe` -- Risk analysis
+  - `adr_collection.vibe` -- Architecture Decision Records
 
 ---
 
-### 3. Tool-Agnostic
+## MCP Server
 
-Any system can generate `.vibe`.
+VIBE includes a local MCP server for AI tool integration. The server provides:
 
-Examples:
+- **Tools**: Create sessions, write/read plans, manage sessions
+- **Prompts**: System prompt that teaches AI the .vibe format
+- **Resources**: Spec documents and templates as readable content
 
-- research agents
-- planning frameworks
-- code assistants
-- CI pipelines
-- IDE tools
+Setup:
 
----
-
-### 4. Runtime Independence
-
-VIBE does not prescribe execution.
-
-Execution systems may:
-
-- generate code
-- apply repository changes
-- produce infrastructure
-- run validations
-- orchestrate pipelines
-
-VIBE simply describes the **compiled intent.**
-
----
-
-# Typical Workflow
-
-```
-1. AI research tool generates planning docs
-2. Planning artifacts accumulate (markdown, notes, specs)
-3. AI compiler converts artifacts into `.vibe`
-4. `.vibe` becomes the contract for the next system
-5. downstream system executes the work
+```bash
+cd mcp-server
+docker compose up
 ```
 
----
-
-# Why Not Just Use Markdown?
-
-Markdown is great for **humans**, but poor for **machines**.
-
-Problems:
-
-- inconsistent structure
-- missing fields
-- ambiguous intent
-- difficult validation
-- scope drift
-
-`.vibe` provides a **strict schema** that AI systems can reliably consume.
+See `vibe/spec/VIBE_MCP_SERVER.md` for the full specification.
 
 ---
 
-# Goals of the Project
+## Key Concepts
 
-VIBE aims to become a **universal compiled format for AI work specification.**
-
-Similar to how compilers normalize code before execution, VIBE normalizes **AI-generated work plans** before downstream systems act on them.
+- **Sections** -- Typed content blocks: `analysis`, `design`, `specification`, `decision`, `risk`, `checklist`
+- **Decisions** -- First-class Architecture Decision Records with options, rationale, and consequences
+- **Quality** -- Criteria that define "done": `review`, `test`, `metric`, `checklist`
+- **Imports** -- Compose documents by importing and merging `.vibe` files
+- **Sessions** -- Group related planning documents via the MCP server
 
 ---
 
-# Future Tooling
+## Specification Documents
 
-Planned tooling includes:
+The full specification lives under `vibe/spec/`:
+
+**Normative:**
+- `VIBE_SPEC_v2.md` -- Core format specification
+- `VIBE_CONSUMER_CONTRACT.md` -- Consumer requirements
+- `VIBE_MERGE_SEMANTICS.md` -- Import and merge rules
+- `VIBE_ERRORS.md` -- Error taxonomy
+
+**Informative:**
+- `VIBE_DOCUMENT_TYPES.md` -- Section types and archetypes
+- `VIBE_DEPENDENCIES.md` -- Artifact and section dependencies
+- `VIBE_AUTHORING_GUIDE.md` -- How to write .vibe documents
+- `VIBE_REFERENCE_DOCUMENT.md` -- Canonical example document
+- `VIBE_INTEGRATION_HOOKS.md` -- External tool integration
+- `VIBE_MULTI_AUTHOR.md` -- Multi-author collaboration
+- `VIBE_MCP_SERVER.md` -- MCP server specification
+
+---
+
+## Repository Structure
 
 ```
-vibe compile
-vibe validate
-vibe inspect
-vibe normalize
+project.vibe                          # Root document
+vibe/
+  stdlib/                             # Standard library
+    quality.vibe
+    context_budget.vibe
+    templates/
+      overview.vibe
+      architecture.vibe
+      implementation_plan.vibe
+      risk_assessment.vibe
+      adr_collection.vibe
+  spec/                               # Specification documents
+    VIBE_SPEC_v2.md
+    VIBE_CONSUMER_CONTRACT.md
+    VIBE_MERGE_SEMANTICS.md
+    ...
+  schema/                             # JSON Schema
+    vibe.schema.json
+  templates/                          # Project templates
+    new_project.vibe
+mcp-server/                           # MCP server
+  Dockerfile
+  docker-compose.yml
+  src/
+syntaxes/                             # Editor support
+  vibe.tmLanguage.json
 ```
 
-As well as integrations through:
+---
 
-- MCP servers
-- IDE plugins
-- AI skills
-- CI pipelines
+## Status
+
+VIBE v2 specification. The format is designed for AI-driven planning with structured sections, explicit decisions, and measurable quality criteria.
 
 ---
 
-# Status
-
-Early specification.
-
-The goal of this repository is to define the **format and philosophy of compiled AI work contracts.**
-
----
-
-# License
+## License
 
 MIT

@@ -1,0 +1,12 @@
+[project]
+name = "vibe-mcp-server"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.20",
+]
+
+[project.scripts]
+vibe-mcp = "src.server:main"

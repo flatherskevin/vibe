@@ -1,0 +1,298 @@
+vibe: 2.0
+
+meta:
+  name: vibe_v2_stdlib_refactor
+  description: >
+    Standard library transformation plan. Defines what to delete, adapt,
+    and create in vibe/stdlib/ for the v2 pivot.
+  session_id: 2026-03-10-a7f3b2
+  created_at: "2026-03-10"
+  author: claude
+  tags:
+    - stdlib
+    - migration
+    - v2
+  status: draft
+
+imports:
+  - plans/10_format_spec.vibe
+
+context:
+  problem: |
+    The v1 standard library contains five modules, most of which support
+    runtime execution (tools.vibe, plan_manifest_schema.vibe, gates.vibe).
+    The v2 stdlib needs to provide document templates, quality criteria
+    libraries, and reusable context blocks instead.
+
+  constraints: |
+    - Must not break the repo structure (stdlib stays under vibe/stdlib/)
+    - Templates must be valid v2 .vibe files that serve as starting points
+    - Quality criteria should be importable and composable
+    - Keep context_budget.vibe concepts (useful for AI context management)
+
+  assumptions: |
+    - AI systems will import stdlib templates to bootstrap new documents
+    - Quality criteria libraries reduce boilerplate in plan files
+    - The stdlib is small enough to manage without a package system
+
+  scope: |
+    Covers vibe/stdlib/ changes only. Spec document changes are in
+    70_spec_rewrites.vibe. Schema changes are in 10_format_spec.vibe.
+
+artifacts:
+  - path: vibe/stdlib/tools.vibe
+    kind: vibe
+    description: v1 tool definitions module -- to be deleted
+    status: planned
+    acceptance_criteria:
+      - File is removed from repository
+      - No remaining imports reference this file
+
+  - path: vibe/stdlib/plan_manifest_schema.vibe
+    kind: vibe
+    description: v1 plan manifest schema wiring -- to be deleted
+    status: planned
+    acceptance_criteria:
+      - File is removed from repository
+      - No remaining imports reference this file
+
+  - path: vibe/stdlib/schemas/plan_manifest.schema.json
+    kind: json
+    description: v1 plan manifest JSON schema -- to be deleted
+    status: planned
+    acceptance_criteria:
+      - File and directory removed from repository
+
+  - path: vibe/stdlib/quality.vibe
+    kind: vibe
+    description: v2 quality criteria library (replaces validators.vibe)
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file
+      - Contains reusable quality criteria for common checks
+      - Importable by other .vibe files
+
+  - path: vibe/stdlib/templates/overview.vibe
+    kind: vibe
+    description: Template for overview documents
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file with placeholder content
+      - Follows overview archetype from 20_document_types.vibe
+
+  - path: vibe/stdlib/templates/architecture.vibe
+    kind: vibe
+    description: Template for architecture documents
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file with placeholder content
+      - Follows architecture archetype
+
+  - path: vibe/stdlib/templates/implementation_plan.vibe
+    kind: vibe
+    description: Template for implementation plan documents
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file with placeholder content
+      - Follows implementation plan archetype
+
+  - path: vibe/stdlib/templates/risk_assessment.vibe
+    kind: vibe
+    description: Template for risk assessment documents
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file with placeholder content
+      - Follows risk assessment archetype
+
+  - path: vibe/stdlib/templates/adr_collection.vibe
+    kind: vibe
+    description: Template for ADR collection documents
+    status: planned
+    acceptance_criteria:
+      - Valid v2 .vibe file with placeholder content
+      - Follows ADR collection archetype
+
+sections:
+  - id: delete_plan
+    type: checklist
+    title: Files to Delete
+    content: |
+      The following stdlib files exist solely to support v1 runtime execution
+      and have no equivalent in v2:
+
+      - [ ] vibe/stdlib/tools.vibe
+            Defines fs.read, fs.write, fs.list, fs.apply_patch, exec.run.
+            Reason: Tool definitions are an execution concern. The tools
+            available depend on the runtime, not the plan format.
+
+      - [ ] vibe/stdlib/plan_manifest_schema.vibe
+            Wires plan_manifest.schema.json validation.
+            Reason: Plan manifests are a v1 execution artifact. v2 does
+            not produce or consume plan manifests.
+
+      - [ ] vibe/stdlib/schemas/plan_manifest.schema.json
+            JSON schema for the plan manifest format.
+            Reason: Same as above. No plan manifests in v2.
+
+  - id: adapt_plan
+    type: design
+    title: Files to Adapt
+    content: |
+      ### gates.vibe -> quality_gates.vibe (or merge into quality.vibe)
+      Current: Defines gate types (file_exists, file_tree, json_schema,
+      content_rules, command_success, diff_budget) for runtime execution.
+      Adapted: Remove execution gate semantics. Keep quality gate concepts
+      as quality criteria patterns. For example:
+      - file_exists gate -> "required artifact exists" quality criterion
+      - json_schema gate -> "artifact validates against schema" criterion
+      - content_rules gate -> "content meets standards" criterion
+      Decision: Merge into quality.vibe rather than keeping separate file.
+
+      ### validators.vibe -> quality.vibe
+      Current: Defines json_parse, file_tree, content_rules, diff_budget
+      validators that a runtime executes after workflow completion.
+      Adapted: Convert to importable quality criteria. Instead of executable
+      validators, provide quality criterion templates that documents can
+      import and reference in their quality section.
+
+      ### context_budget.vibe
+      Current: Context budgeting and compaction guidance for long-running
+      agent workflows.
+      Adapted: Still relevant for AI systems working with .vibe files.
+      Update version to 2.0, remove references to runtime steps and plan
+      manifests, keep context window management guidance.
+
+  - id: create_plan
+    type: design
+    title: New Files to Create
+    content: |
+      ### vibe/stdlib/quality.vibe
+      Importable quality criteria library. Provides reusable quality
+      criterion definitions that documents can reference:
+
+        quality:
+          - id: stdlib_artifacts_exist
+            type: checklist
+            description: All planned artifacts have been created
+            criteria: |
+              Every artifact listed in the artifacts section exists at
+              its specified path.
+
+          - id: stdlib_yaml_valid
+            type: test
+            description: Document is valid YAML
+            criteria: |
+              The .vibe file parses without YAML syntax errors.
+
+          - id: stdlib_schema_valid
+            type: test
+            description: Document validates against v2 schema
+            criteria: |
+              The .vibe file passes validation against
+              vibe/schema/vibe.schema.json.
+
+          - id: stdlib_sections_complete
+            type: review
+            description: All sections have substantive content
+            criteria: |
+              No section has empty or placeholder-only content.
+
+      ### vibe/stdlib/templates/
+      Five templates matching the document archetypes defined in
+      20_document_types.vibe. Each template is a valid v2 .vibe file
+      with skeleton structure and placeholder content that AI systems
+      can fill in:
+
+      - overview.vibe: Problem, users, approach, risks, success criteria
+      - architecture.vibe: Current state, design, data model, API, risks
+      - implementation_plan.vibe: Scope, approach, artifacts, tasks, verification
+      - risk_assessment.vibe: Context, risks, mitigations, monitoring
+      - adr_collection.vibe: Background context + decisions array
+
+  - id: migration_order
+    type: checklist
+    title: Migration Execution Order
+    content: |
+      1. [ ] Create vibe/stdlib/templates/ directory
+      2. [ ] Create quality.vibe (new file, no dependencies)
+      3. [ ] Create all five template files
+      4. [ ] Update context_budget.vibe to v2 format
+      5. [ ] Delete tools.vibe
+      6. [ ] Delete plan_manifest_schema.vibe
+      7. [ ] Delete schemas/plan_manifest.schema.json
+      8. [ ] Rename or delete gates.vibe (content merged into quality.vibe)
+      9. [ ] Delete or archive validators.vibe (replaced by quality.vibe)
+      10. [ ] Update all imports in project.vibe and other files
+
+decisions:
+  - id: dec_merge_gates_validators
+    title: Merge gates.vibe and validators.vibe into single quality.vibe
+    status: proposed
+    context: |
+      v1 has separate concepts for gates (pre-conditions checked during
+      execution) and validators (post-conditions checked after execution).
+      In v2 without execution, both are quality criteria.
+    options:
+      - name: keep_separate
+        description: Adapt gates.vibe and validators.vibe as separate v2 files
+      - name: merge_into_quality
+        description: Combine both into a single quality.vibe
+    chosen: merge_into_quality
+    rationale: |
+      Without execution semantics, the distinction between pre-conditions
+      and post-conditions disappears. Both become "criteria for evaluating
+      the plan/output." A single file is simpler and avoids artificial
+      separation.
+    consequences:
+      - One file to maintain instead of two
+      - gates.vibe and validators.vibe both get deleted
+      - Quality criteria are more general (not tied to execution phases)
+
+  - id: dec_template_format
+    title: Templates are valid .vibe files with placeholders
+    status: proposed
+    context: |
+      Templates could be separate formats (e.g., mustache templates,
+      JSON schema generators) or valid .vibe files with placeholder
+      content.
+    options:
+      - name: template_engine
+        description: Use a template engine with variables and conditionals
+      - name: valid_vibe_files
+        description: Templates are valid .vibe files with placeholder strings
+    chosen: valid_vibe_files
+    rationale: |
+      Valid .vibe files are self-documenting, require no template engine,
+      and can be used directly as starting points. AI systems are good
+      at replacing placeholder content. A template engine adds complexity
+      for minimal benefit.
+    consequences:
+      - Templates parse as valid YAML and valid v2 .vibe
+      - Placeholders use descriptive strings like "[Describe the problem]"
+      - No template engine dependency
+
+quality:
+  - id: q_delete_safe
+    type: checklist
+    description: Deletions don't break remaining files
+    criteria: |
+      - No remaining .vibe file imports a deleted module
+      - No spec document references a deleted module without noting removal
+      - project.vibe imports are updated
+
+  - id: q_quality_importable
+    type: test
+    description: quality.vibe is usable via imports
+    criteria: |
+      - quality.vibe is a valid v2 .vibe file
+      - Other .vibe files can import it and reference its quality criteria
+      - Quality criteria IDs are namespaced (stdlib_ prefix)
+
+  - id: q_templates_valid
+    type: test
+    description: All templates are valid v2 .vibe files
+    criteria: |
+      - Each template parses as valid YAML
+      - Each template has vibe: 2.0 header
+      - Each template has all required fields populated
+      - Each template follows its corresponding archetype

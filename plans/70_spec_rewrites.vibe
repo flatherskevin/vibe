@@ -1,0 +1,513 @@
+vibe: 2.0
+
+meta:
+  name: vibe_v2_spec_rewrites
+  description: >
+    Detailed plan for each spec document rewrite. One section per document
+    with current purpose, new purpose, key changes, and rename map.
+  session_id: 2026-03-10-a7f3b2
+  created_at: "2026-03-10"
+  author: claude
+  tags:
+    - spec
+    - documentation
+    - migration
+    - v2
+  status: draft
+
+imports:
+  - plans/10_format_spec.vibe
+  - plans/20_document_types.vibe
+  - plans/60_migration.vibe
+
+context:
+  problem: |
+    The v1 spec consists of 11 documents oriented around runtime execution.
+    The v2 spec must be rewritten to describe a document format for planning,
+    not an execution format for runtimes. Each document needs a clear
+    rewrite plan specifying what changes, what's preserved, and what the
+    target document should cover.
+
+  constraints: |
+    - Every v1 spec document must have a disposition (rewrite, delete, or new)
+    - Rewritten documents should preserve valuable concepts where possible
+    - New documents should fill gaps left by deletions
+    - The spec set must be self-consistent (no dangling references)
+
+  assumptions: |
+    - Spec documents are Markdown files (not .vibe files)
+    - The spec audience is AI systems, tool builders, and format authors
+    - Spec documents should be concise and example-heavy
+
+  scope: |
+    Covers the content plan for each spec document. Does not contain the
+    actual rewritten content (that's the implementation task).
+
+  glossary: |
+    - Normative: Spec requirements that consumers MUST follow
+    - Informative: Guidance that consumers SHOULD follow
+    - Disposition: What happens to a file (rewrite, delete, keep, new)
+
+sections:
+  - id: rename_map
+    type: specification
+    title: Document Rename Map
+    content: |
+      v1 Document                    -> v2 Document
+      -----------------------------------------------
+      VIBE_SPEC_v1.md                -> VIBE_SPEC_v2.md
+      VIBE_RUNTIME_CONTRACT.md       -> VIBE_CONSUMER_CONTRACT.md
+      VIBE_PROGRAM_IR.md             -> VIBE_MERGE_SEMANTICS.md
+      VIBE_STEP_TYPES.md             -> VIBE_DOCUMENT_TYPES.md
+      VIBE_RUNTIME_HOOKS.md          -> VIBE_INTEGRATION_HOOKS.md
+      VIBE_SUBAGENTS.md              -> VIBE_MULTI_AUTHOR.md
+      VIBE_REFERENCE_PROGRAM.md      -> VIBE_REFERENCE_DOCUMENT.md
+      VIBE_ERRORS.md                 -> VIBE_ERRORS.md (rewrite in place)
+      VIBE_SCOPE.md                  -> (merge into spec or delete)
+      VIBE_DEPENDENCIES.md           -> VIBE_DEPENDENCIES.md (adapt)
+      VIBE_AUTHORING_GUIDE.md        -> VIBE_AUTHORING_GUIDE.md (rewrite)
+      VIBE_INDEX.md                  -> VIBE_INDEX.md (rewrite)
+      (new)                          -> VIBE_MCP_SERVER.md
+
+  - id: spec_v2
+    type: specification
+    title: "VIBE_SPEC_v2.md (rewrite of VIBE_SPEC_v1.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Language overview defining program model, file format,
+      top-level fields, standard library, and philosophy.
+
+      New purpose: Document format overview defining the .vibe format,
+      top-level fields, and design philosophy.
+
+      Key changes:
+      - Program model (parse->compile->plan->apply->validate) replaced with
+        document model (write->validate->review->import)
+      - Remove: tools, workflow, validation field definitions
+      - Add: sections, decisions, quality field definitions
+      - Update: meta (new fields), artifacts (new fields), context (new fields)
+      - Remove: legacy fields section entirely
+      - Update: standard library description (quality.vibe, templates)
+      - Update: philosophy (document format, not execution format)
+      - Update: related documents list
+
+      Structure:
+      1. Format overview (what .vibe files are)
+      2. Document model (write -> validate -> review -> import)
+      3. File format (YAML, version declaration)
+      4. Top-level fields (all 8 fields defined)
+      5. Standard library reference
+      6. Related documents
+      7. Philosophy
+
+  - id: consumer_contract
+    type: specification
+    title: "VIBE_CONSUMER_CONTRACT.md (replaces VIBE_RUNTIME_CONTRACT.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Required runtime behaviors -- parsing, merge rules,
+      plan/apply phases, tool-truth, gates, retries, evidence, security.
+
+      New purpose: Required consumer behaviors -- how tools, AI systems,
+      and humans should parse, validate, and interpret .vibe documents.
+
+      Key changes:
+      - Remove: plan/apply phase requirements
+      - Remove: tool execution requirements
+      - Remove: gate evaluation requirements
+      - Remove: retry policy requirements
+      - Remove: evidence collection requirements
+      - Keep (adapted): parsing requirements (YAML parsing rules)
+      - Keep (adapted): merge rules (simplified for v2)
+      - Keep (adapted): security considerations (path traversal in imports)
+      - Add: field interpretation rules (how to read sections, decisions)
+      - Add: validation requirements (schema validation behavior)
+      - Add: status field semantics (draft/review/final lifecycle)
+
+      Structure:
+      1. What is a consumer? (definition and examples)
+      2. Parsing requirements (YAML, version check)
+      3. Import resolution (path resolution, circular detection)
+      4. Merge behavior (field-by-field merge rules)
+      5. Field interpretation (how to read each field)
+      6. Validation (schema validation expectations)
+      7. Security (import path safety)
+
+  - id: merge_semantics
+    type: specification
+    title: "VIBE_MERGE_SEMANTICS.md (replaces VIBE_PROGRAM_IR.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Canonical compiled/merged representation (Program IR)
+      that runtimes produce deterministically from import resolution.
+
+      New purpose: Simplified merge rules for combining imported .vibe files.
+      No compilation step, no IR, just straightforward field merging.
+
+      Key changes:
+      - Remove: Program IR concept entirely
+      - Remove: Tool merging (tools field removed)
+      - Remove: Workflow step merging (workflow field removed)
+      - Remove: Validation merging (validation field removed)
+      - Simplify: Field-level merge rules only
+      - Add: Conflict resolution examples
+
+      Structure:
+      1. Import resolution algorithm
+      2. Circular import detection
+      3. Field merge rules (one rule per field)
+      4. Conflict resolution (what happens on duplicate IDs)
+      5. Examples (two files merged, showing result)
+
+      Merge rules (from 10_format_spec.vibe):
+      - vibe: root wins
+      - meta: root wins (no deep merge)
+      - imports: already resolved, not merged
+      - context: deep merge, root keys override
+      - artifacts: concat, deduplicate by path (root wins)
+      - sections: concat (root after imports)
+      - decisions: concat, deduplicate by id (root wins)
+      - quality: concat, deduplicate by id (root wins)
+
+  - id: document_types
+    type: specification
+    title: "VIBE_DOCUMENT_TYPES.md (replaces VIBE_STEP_TYPES.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Step type definitions (plan, generate, apply,
+      validate, summarize) with suggested runtime defaults.
+
+      New purpose: Section type definitions and document archetypes.
+
+      Key changes:
+      - Remove: All step type definitions
+      - Add: Six section types (analysis, design, decision, specification,
+        risk, checklist) with definitions and examples
+      - Add: Document archetypes (overview, architecture, implementation
+        plan, risk assessment, ADR collection)
+      - Add: Quality criteria types (review, test, metric, checklist)
+      - Based entirely on 20_document_types.vibe
+
+      Structure:
+      1. Section types (definition, use cases, examples for each)
+      2. Document archetypes (purpose, typical sections, examples)
+      3. Quality criteria types (definition, use cases for each)
+      4. Extensibility model
+
+  - id: integration_hooks
+    type: specification
+    title: "VIBE_INTEGRATION_HOOKS.md (replaces VIBE_RUNTIME_HOOKS.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Runtime hook extensibility -- pre/post step hooks,
+      gate hooks, custom event handlers.
+
+      New purpose: How external tools integrate with .vibe files without
+      executing them.
+
+      Key changes:
+      - Remove: Pre/post step hooks (no steps)
+      - Remove: Gate hooks (no gates)
+      - Remove: Custom event handlers (no events)
+      - Add: MCP integration (how AI tools use the MCP server)
+      - Add: IDE integration (syntax highlighting, preview, navigation)
+      - Add: CI/CD integration (validating .vibe files in pipelines)
+      - Add: Import hooks (custom import resolvers)
+
+      Structure:
+      1. MCP integration (tools, prompts, resources)
+      2. IDE integration (language support, preview rendering)
+      3. CI/CD integration (validation in pipelines, diff tracking)
+      4. Custom import resolvers
+      5. Ecosystem conventions
+
+  - id: multi_author
+    type: specification
+    title: "VIBE_MULTI_AUTHOR.md (replaces VIBE_SUBAGENTS.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Subagent delegation patterns for multi-agent
+      workflows and parallel execution.
+
+      New purpose: Multi-author patterns for .vibe documents. How
+      multiple AI systems and humans collaborate on planning documents.
+
+      Key changes:
+      - Remove: Runtime delegation patterns
+      - Remove: Parallel execution coordination
+      - Add: Author tracking via meta.author field
+      - Add: Session-based collaboration (multiple authors in one session)
+      - Add: Cross-session reference patterns
+      - Add: Review and approval workflows (draft -> review -> final)
+      - Add: Conflict resolution for concurrent edits
+
+      Structure:
+      1. Author identification (meta.author values and conventions)
+      2. Session collaboration (multiple authors, one session)
+      3. Cross-session building (importing from prior sessions)
+      4. Review workflows (status field lifecycle)
+      5. Conflict resolution (what happens when two authors edit)
+
+  - id: reference_document
+    type: specification
+    title: "VIBE_REFERENCE_DOCUMENT.md (replaces VIBE_REFERENCE_PROGRAM.md)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Canonical example v1 program with workflow steps,
+      plan manifest, and runtime behavior.
+
+      New purpose: Canonical example v2 document showing a realistic
+      planning scenario with all v2 features.
+
+      Key changes:
+      - Replace: Execution example with planning document example
+      - Replace: Plan manifest example with quality criteria example
+      - Replace: Runtime behavior with document lifecycle
+      - Keep (adapted): Repository layout (updated for v2)
+      - Show: A realistic planning scenario (e.g., planning an API feature)
+
+      Structure:
+      1. Purpose of the reference document
+      2. Reference repository layout (v2)
+      3. Reference .vibe document (complete example)
+      4. Section examples (one of each type)
+      5. Decision examples (with full ADR structure)
+      6. Quality criteria examples
+      7. Import example (composing documents)
+      8. Document lifecycle (draft -> review -> final)
+
+  - id: errors_rewrite
+    type: specification
+    title: "VIBE_ERRORS.md (rewrite in place)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Runtime error taxonomy and codes covering parse
+      errors, merge errors, execution errors, tool errors, gate errors.
+
+      New purpose: Document validation error taxonomy covering parse
+      errors, schema errors, import resolution errors.
+
+      Key changes:
+      - Keep: Parse error codes (YAML syntax errors)
+      - Keep (adapted): Merge error codes (import conflicts)
+      - Remove: Execution error codes (no execution)
+      - Remove: Tool error codes (no tools)
+      - Remove: Gate error codes (no gates)
+      - Add: Schema validation error codes
+      - Add: Import resolution error codes
+      - Add: MCP server error codes
+
+      Error categories:
+      1. PARSE_* -- YAML parsing failures
+      2. SCHEMA_* -- Schema validation failures
+      3. IMPORT_* -- Import resolution failures
+      4. MERGE_* -- Field merge conflicts
+      5. MCP_* -- MCP server operation errors
+
+  - id: scope_disposition
+    type: decision
+    title: "VIBE_SCOPE.md Disposition"
+    content: |
+      VIBE_SCOPE.md defines repository write scope rules. In v1 this
+      controlled which paths the runtime could write to. In v2 there
+      is no runtime writing files.
+
+      Options:
+      1. Delete entirely -- write scope is a runtime concern
+      2. Merge into VIBE_SPEC_v2.md as a note about scope field
+      3. Rewrite as document scope guidance (what artifacts should cover)
+
+      Recommendation: Delete. The scope concept was about constraining
+      runtime side effects. Without a runtime, there's nothing to scope.
+      If artifact path guidance is needed, it belongs in the authoring guide.
+
+  - id: dependencies_adapt
+    type: specification
+    title: "VIBE_DEPENDENCIES.md (adapt)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Artifact dependency semantics for execution-time
+      dependency resolution.
+
+      New purpose: Artifact dependency semantics for design-time
+      planning. How artifacts reference each other and how depends_on
+      fields are interpreted.
+
+      Key changes:
+      - Remove: Execution-time resolution (build ordering, etc.)
+      - Keep: depends_on field semantics
+      - Keep: Dependency graph concepts
+      - Add: Section depends_on semantics
+      - Add: Cross-document dependency via imports
+
+      Structure:
+      1. Artifact depends_on (what it means for artifacts to depend)
+      2. Section depends_on (content ordering within a document)
+      3. Cross-document dependencies (via imports)
+      4. Circular dependency detection
+
+  - id: authoring_guide_rewrite
+    type: specification
+    title: "VIBE_AUTHORING_GUIDE.md (rewrite)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Guide for writing v1 programs (plan first,
+      manifest, gates, small steps).
+
+      New purpose: Guide for writing v2 documents (section types,
+      decisions, quality criteria, MCP workflow).
+
+      Key changes:
+      - Replace: "Golden Rules" (v1 execution focused) with new
+        authoring principles for document creation
+      - Replace: Step writing guidance with section writing guidance
+      - Replace: Gate guidance with quality criteria guidance
+      - Replace: Plan manifest guidance with decision documentation
+      - Add: Using the MCP server for document creation
+      - Add: Template usage guidance
+      - Add: Session management best practices
+      - Keep: Artifact writing guidance (adapted for v2 fields)
+
+      New golden rules (proposed):
+      1. Start with context (problem, constraints, assumptions)
+      2. Use the right section type for each piece of content
+      3. Make decisions explicit (use the decisions field)
+      4. Define quality criteria (what does "done" look like)
+      5. Compose via imports (don't repeat, reference)
+      6. Track status (draft -> review -> final)
+
+  - id: index_rewrite
+    type: specification
+    title: "VIBE_INDEX.md (rewrite)"
+    depends_on:
+      - rename_map
+    content: |
+      Current purpose: Index of v1 spec documents with normative vs
+      recommended categorization.
+
+      New purpose: Index of v2 spec documents.
+
+      Key changes:
+      - Update: Document list to v2 names
+      - Update: Categorization (normative vs informative)
+      - Update: Standard library description
+      - Update: Completeness checklist for v2
+      - Add: MCP server documentation reference
+
+      v2 Normative documents:
+      - VIBE_SPEC_v2.md
+      - VIBE_CONSUMER_CONTRACT.md
+      - VIBE_MERGE_SEMANTICS.md
+      - VIBE_ERRORS.md
+
+      v2 Informative documents:
+      - VIBE_DOCUMENT_TYPES.md
+      - VIBE_DEPENDENCIES.md
+      - VIBE_AUTHORING_GUIDE.md
+      - VIBE_REFERENCE_DOCUMENT.md
+      - VIBE_INTEGRATION_HOOKS.md
+      - VIBE_MULTI_AUTHOR.md
+      - VIBE_MCP_SERVER.md
+
+  - id: mcp_server_doc
+    type: specification
+    title: "VIBE_MCP_SERVER.md (new)"
+    content: |
+      No v1 equivalent. New document.
+
+      Purpose: MCP server specification and reference. Defines the
+      tools, prompts, and resources the server exposes.
+
+      Based on: 40_mcp_server.vibe and 50_session_system.vibe
+
+      Structure:
+      1. Overview (what the MCP server does)
+      2. Setup (Docker, configuration)
+      3. Tools reference (one section per tool with params and returns)
+      4. Prompts reference (plan_in_vibe)
+      5. Resources reference (spec, templates, quality)
+      6. Session management (ID format, lifecycle, storage)
+      7. Error handling (error codes and messages)
+
+decisions:
+  - id: dec_scope_disposition
+    title: Delete VIBE_SCOPE.md rather than rewrite
+    status: proposed
+    context: |
+      VIBE_SCOPE.md is entirely about runtime write scope constraints.
+      In v2 there is no runtime to constrain.
+    options:
+      - name: delete
+        description: Remove entirely, scope is a runtime concept
+      - name: rewrite
+        description: Rewrite as document scope guidance
+      - name: merge
+        description: Merge relevant bits into VIBE_SPEC_v2.md
+    chosen: delete
+    rationale: |
+      The concept of "scope" in v1 means "which filesystem paths the
+      runtime may write to." Without a runtime, this has no meaning.
+      Any guidance about artifact paths belongs in the authoring guide,
+      not a dedicated scope document.
+    consequences:
+      - One fewer spec document
+      - No dedicated scope documentation
+      - Artifact path guidance in authoring guide if needed
+
+  - id: dec_rename_convention
+    title: Use descriptive names that reflect v2 concepts
+    status: proposed
+    context: |
+      Should renamed spec documents keep similar names or adopt
+      entirely new names that reflect v2 concepts?
+    options:
+      - name: keep_names
+        description: Keep names like RUNTIME_CONTRACT, just update content
+      - name: rename_descriptive
+        description: Rename to match v2 concepts (CONSUMER_CONTRACT, etc.)
+    chosen: rename_descriptive
+    rationale: |
+      Names like RUNTIME_CONTRACT are misleading in a format without
+      a runtime. Descriptive renames (CONSUMER_CONTRACT, MERGE_SEMANTICS,
+      DOCUMENT_TYPES) immediately communicate the v2 focus. Git tracks
+      the rename history.
+    consequences:
+      - All cross-references must be updated
+      - Git history shows renames
+      - New names are self-documenting
+
+quality:
+  - id: q_every_doc_planned
+    type: checklist
+    description: Every spec document has a rewrite plan
+    criteria: |
+      - All 11 existing spec documents have a disposition
+      - All 5 new spec documents have content plans
+      - No spec document is unaccounted for
+
+  - id: q_no_dangling_refs
+    type: review
+    description: Planned spec set has no dangling references
+    criteria: |
+      - Every cross-reference between planned docs is valid
+      - No planned doc references a doc that will be deleted
+      - Index document lists all planned docs
+
+  - id: q_sufficient_detail
+    type: review
+    description: Rewrite plans have enough detail to execute
+    criteria: |
+      - Each rewrite plan specifies current purpose and new purpose
+      - Key changes are enumerated
+      - Target document structure is outlined
+      - Enough detail for an AI to write the actual document

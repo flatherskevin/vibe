@@ -1,0 +1,258 @@
+vibe: 2.0
+
+meta:
+  name: vibe_v2_document_types
+  description: >
+    Section type system and document archetypes for VIBE v2. Defines the
+    six section types that replace v1 step types and the document archetypes
+    that guide how .vibe files are structured for different purposes.
+  session_id: 2026-03-10-a7f3b2
+  created_at: "2026-03-10"
+  author: claude
+  tags:
+    - document-types
+    - sections
+    - specification
+    - v2
+  status: draft
+
+imports:
+  - plans/10_format_spec.vibe
+
+context:
+  problem: |
+    v1 defined five step types (plan, generate, apply, validate, summarize)
+    oriented around runtime execution phases. v2 needs section types oriented
+    around document content -- what kind of thinking/planning does each section
+    represent? Additionally, .vibe files need recognized archetypes so that AI
+    systems know what kind of document to produce for a given purpose.
+
+  constraints: |
+    - Section types must be general enough for any planning domain
+    - Section types must be specific enough to be meaningful
+    - Document archetypes are guidance, not enforcement
+    - Must support freeform content within typed sections
+
+  assumptions: |
+    - AI systems benefit from knowing the type of content expected
+    - A small set of types (6) is better than an extensible taxonomy
+    - Human reviewers scan by section type to find what they care about
+
+  scope: |
+    Covers section types and document archetypes. Individual field schemas
+    are in 10_format_spec.vibe. Quality criteria types are covered here too
+    as they parallel section types.
+
+sections:
+  - id: section_types
+    type: specification
+    title: The Six Section Types
+    content: |
+      Every section in a .vibe file has a `type` field. Six types are defined:
+
+      ### 1. analysis
+      Understanding and investigating a problem space.
+      Use for: problem decomposition, research findings, competitive analysis,
+      root cause analysis, requirements gathering.
+      Example titles: "Problem Space", "Current Architecture", "User Research"
+
+      ### 2. design
+      Proposing how something should work.
+      Use for: architecture, API design, data models, UI layouts, system
+      interactions, integration patterns.
+      Example titles: "API Design", "Data Model", "Component Architecture"
+
+      ### 3. decision
+      Recording a choice and its rationale.
+      Use for: technology selection, approach selection, trade-off analysis.
+      Note: For formal ADRs, use the top-level `decisions` field instead.
+      Sections of type `decision` are for inline decision discussion within
+      a broader document.
+      Example titles: "Database Selection", "Auth Strategy"
+
+      ### 4. specification
+      Defining exact requirements or interfaces.
+      Use for: field definitions, protocol specs, schema documentation,
+      contract definitions, format specifications.
+      Example titles: "Field Definitions", "API Contract", "Wire Format"
+
+      ### 5. risk
+      Identifying and assessing risks.
+      Use for: risk registers, threat models, failure modes, mitigation
+      plans, dependency risks, security considerations.
+      Example titles: "Risk Register", "Failure Modes", "Security Model"
+
+      ### 6. checklist
+      Actionable items to track or verify.
+      Use for: migration checklists, launch readiness, review criteria,
+      testing plans, acceptance checklists.
+      Example titles: "Migration Checklist", "Launch Readiness", "Test Plan"
+
+  - id: v1_mapping
+    type: analysis
+    title: Mapping from v1 Step Types
+    content: |
+      v1 step types mapped to v2 section types:
+
+      | v1 Step Type | v2 Equivalent       | Notes                           |
+      |-------------|---------------------|---------------------------------|
+      | plan        | analysis + design   | Planning is thinking, not executing |
+      | generate    | (removed)           | Execution concern                |
+      | apply       | (removed)           | Execution concern                |
+      | validate    | checklist + quality | Validation becomes review criteria |
+      | summarize   | analysis            | Summary is a form of analysis    |
+
+      The key insight: v1 types described what a runtime *does*.
+      v2 types describe what a section *contains*.
+
+  - id: document_archetypes
+    type: specification
+    title: Document Archetypes
+    content: |
+      Document archetypes are recommended patterns for organizing .vibe files.
+      They are not enforced by schema but are guidance for AI systems and
+      human authors.
+
+      ### Overview Document
+      Purpose: High-level understanding of a project or initiative.
+      Typical sections: analysis (problem), analysis (users), design (approach),
+      risk (key risks), checklist (success criteria).
+      Example: A planning kickoff document.
+
+      ### Architecture Document
+      Purpose: Technical design for a system or component.
+      Typical sections: analysis (current state), design (proposed design),
+      design (data model), design (API), specification (interfaces),
+      risk (technical risks).
+      Example: System architecture for a new service.
+
+      ### Implementation Plan
+      Purpose: Detailed plan for executing a change.
+      Typical sections: analysis (scope), design (approach),
+      specification (artifacts), checklist (tasks), checklist (verification).
+      Uses artifacts extensively.
+      Example: Feature implementation plan with file-by-file changes.
+
+      ### Risk Assessment
+      Purpose: Comprehensive risk analysis.
+      Typical sections: analysis (context), risk (identified risks),
+      risk (mitigations), checklist (monitoring), decision (risk acceptance).
+      Example: Security review or dependency risk assessment.
+
+      ### ADR Collection
+      Purpose: Record of architectural decisions.
+      Typical sections: analysis (context) for background.
+      Uses the top-level `decisions` field for each ADR.
+      Example: Technology choices for a new project.
+
+  - id: quality_types
+    type: specification
+    title: Quality Criteria Types
+    content: |
+      The `quality` field supports four types of criteria:
+
+      ### review
+      Human or AI review against stated criteria.
+      Use for: document completeness, design review, code review standards.
+      Example: "Architecture covers all integration points"
+
+      ### test
+      Testable condition (but not executed by VIBE).
+      Use for: acceptance tests, integration test criteria, regression checks.
+      Example: "API returns 200 for valid requests"
+
+      ### metric
+      Measurable quantity with a target.
+      Use for: performance targets, coverage goals, SLA requirements.
+      Example: "Response time < 200ms at p95"
+
+      ### checklist
+      List of items that must all be true.
+      Use for: launch readiness, compliance requirements, review checklists.
+      Example: "All endpoints have authentication"
+
+  - id: extensibility
+    type: design
+    title: Extensibility Model
+    content: |
+      Section types and quality types are fixed in v2.0. The set is
+      intentionally small to keep the format learnable.
+
+      If a section doesn't fit neatly into one type, use the closest
+      match. The type is guidance for readers, not a constraint on content.
+
+      Custom types are not supported in v2.0. If the community identifies
+      a clear gap, new types can be added in a point release (2.1, 2.2).
+      Adding a type is backward-compatible since consumers should already
+      handle unknown types gracefully.
+
+decisions:
+  - id: dec_six_types
+    title: Exactly six section types
+    status: proposed
+    context: |
+      Too few types and they lose meaning. Too many and AI systems struggle
+      to choose. The set must cover common planning activities without
+      becoming a taxonomy exercise.
+    options:
+      - name: three_types
+        description: "Just analysis, design, action"
+      - name: six_types
+        description: "analysis, design, decision, specification, risk, checklist"
+      - name: extensible
+        description: "Open-ended type field with recommended values"
+    chosen: six_types
+    rationale: |
+      Three types are too coarse (risk and specification get lost in "design").
+      Extensible types lead to fragmentation. Six types cover the key modes
+      of planning thought without overwhelming the format.
+    consequences:
+      - AI systems need to learn six type names
+      - Schema validates against a fixed enum
+      - New types require a spec revision
+
+  - id: dec_archetypes_not_enforced
+    title: Document archetypes are guidance only
+    status: proposed
+    context: |
+      Should .vibe files declare their archetype, and should the schema
+      enforce archetype-specific structure?
+    options:
+      - name: enforced_archetypes
+        description: Add a document_type field with archetype-specific validation
+      - name: guidance_only
+        description: Document archetypes in spec but don't enforce in schema
+    chosen: guidance_only
+    rationale: |
+      Enforcing archetypes adds complexity and reduces flexibility. Real
+      planning documents often mix concerns. Archetypes are most useful
+      as prompting guidance for AI systems ("create an architecture
+      document") rather than as schema constraints.
+    consequences:
+      - No document_type field in the schema
+      - Archetypes documented in spec and MCP prompts
+      - AI systems free to mix section types as needed
+
+quality:
+  - id: q_types_cover
+    type: review
+    description: Section types cover common planning activities
+    criteria: |
+      - Each of the six types has clear use cases
+      - No common planning activity is unrepresented
+      - Types are mutually distinguishable (low overlap)
+
+  - id: q_v1_mapping
+    type: review
+    description: v1 step types are clearly mapped to v2 equivalents
+    criteria: |
+      - Every v1 step type has an explicit v2 mapping or removal rationale
+      - No v1 capability is lost without explanation
+
+  - id: q_archetypes_useful
+    type: review
+    description: Document archetypes provide actionable guidance
+    criteria: |
+      - Each archetype has a clear purpose and example
+      - Typical section composition is specified
+      - Archetypes are distinct enough to guide AI generation

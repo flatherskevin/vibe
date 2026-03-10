@@ -1,272 +1,373 @@
-# VIBE Artifact Dependencies (v1.0)
+# VIBE Dependencies (v2)
 
-This document defines dependency semantics for VIBE artifacts.
+Dependencies in VIBE v2 express ordering relationships between artifacts and between sections within a document.
 
-Dependencies are optional in VIBE v1.0, but strongly recommended for non-trivial programs.
-
-They allow runtimes to determine generation order and prevent invalid execution sequences.
+Dependencies are a design-time concept. They tell AI planners and human reviewers what must logically come before what. They do not trigger execution or runtime resolution.
 
 ---
 
 ## 1. Purpose
 
-Artifact dependencies help express that one output requires another output to exist first.
+Dependencies make ordering explicit for:
 
-This improves:
+- AI planners deciding what to write first
+- human reviewers understanding document structure
+- validation tools checking that referenced content exists
+- consumers processing documents in a coherent sequence
 
-- planning order
-- execution order
-- runtime determinism
-- validation correctness
-- AI reasoning quality
-
-Dependencies are especially useful when a program generates:
-
-- planning docs
-- manifests
-- implementation files
-- tests
-- derived documentation
+In v1, dependencies were tied to runtime execution order. In v2, dependencies express logical precedence: "this artifact builds on that one" or "this section assumes that section has been read."
 
 ---
 
-## 2. `depends_on`
+## 2. Artifact Dependencies
 
-Artifacts may declare:
+### 2.1 The `depends_on` Field
 
+Artifacts may declare a `depends_on` field listing paths of other artifacts they build on.
+
+```yaml
+artifacts:
+  - path: spec/api_design.vibe
+    kind: vibe
+    description: API design document
     depends_on:
-      - spec/10_architecture.md
-      - spec/20_artifacts.json
+      - spec/architecture.vibe
 
-The `depends_on` field is a list of artifact paths that must be available before generating or applying the dependent artifact.
+  - path: spec/data_model.vibe
+    kind: vibe
+    description: Data model specification
+    depends_on:
+      - spec/architecture.vibe
+
+  - path: spec/implementation_plan.vibe
+    kind: vibe
+    description: Implementation plan
+    depends_on:
+      - spec/api_design.vibe
+      - spec/data_model.vibe
+```
+
+### 2.2 What Artifact Dependencies Mean
+
+If artifact `A` depends on artifact `B`, this means:
+
+- `B` should be written or reviewed before `A`
+- `A` may reference content, decisions, or structure defined in `B`
+- a consumer processing artifacts in dependency order will encounter `B` before `A`
+
+Artifact dependencies do not mean:
+
+- `B` must be executed to produce `A`
+- `B` must be validated before `A` can be written
+- changes to `B` automatically invalidate `A`
+
+### 2.3 Dependency Graph
+
+The set of all artifact dependencies forms a directed acyclic graph (DAG). This graph defines a partial ordering over artifacts.
+
+Any topological sort of the DAG is a valid processing order.
+
+---
+
+## 3. Section Dependencies
+
+### 3.1 The `depends_on` Field for Sections
+
+Sections within a document may declare dependencies on other section IDs in the same document. This expresses content ordering: one section builds on concepts introduced in another.
+
+```yaml
+sections:
+  - id: requirements_analysis
+    type: analysis
+    title: Requirements Analysis
+    content: |
+      Analysis of the core requirements for the authentication system.
+
+  - id: architecture_decisions
+    type: decision
+    title: Architecture Decisions
+    depends_on:
+      - requirements_analysis
+    content: |
+      Based on the requirements analysis, the following architecture
+      decisions were made.
+
+  - id: implementation_approach
+    type: specification
+    title: Implementation Approach
+    depends_on:
+      - architecture_decisions
+    content: |
+      Given the architecture decisions, the implementation will follow
+      this approach.
+```
+
+### 3.2 What Section Dependencies Mean
+
+If section `X` depends on section `Y`, this means:
+
+- `Y` introduces concepts or decisions that `X` builds on
+- a reader should read `Y` before `X` for full comprehension
+- an AI planner should generate `Y` content before `X` content
+
+Section dependencies are an authoring aid. They help AI systems produce coherent documents where later sections build naturally on earlier ones.
+
+### 3.3 Section Order vs. Section Dependencies
+
+Sections have both a list order (their position in the `sections` array) and optional explicit dependencies.
+
+If no `depends_on` is declared, list order is the implied reading order. When `depends_on` is present, it makes the ordering relationship explicit and machine-verifiable.
+
+Best practice: use `depends_on` when the logical dependency is important and might not be obvious from list position alone.
+
+---
+
+## 4. Cross-Document Dependencies via Imports
+
+Documents that import other `.vibe` files create an implicit dependency on the imported document.
+
+```yaml
+imports:
+  - vibe/stdlib/quality.vibe
+  - spec/shared_context.vibe
+```
+
+An import means:
+
+- the imported document's context, quality criteria, or other content is available to this document
+- the imported document should be valid before this document references its content
+- consumers should process imported documents before the importing document
+
+Cross-document dependencies via imports and artifact-level `depends_on` serve different purposes:
+
+| Mechanism | Scope | Purpose |
+|---|---|---|
+| `imports` | Document-level | Merge content from another `.vibe` file |
+| `depends_on` (artifact) | Artifact-level | Express that one artifact builds on another |
+
+Both create ordering relationships. Imports bring content into scope; artifact dependencies express logical precedence without content merging.
+
+---
+
+## 5. Circular Dependency Detection
+
+### 5.1 Artifact Circular Dependencies
+
+Circular dependencies among artifacts are an error.
+
+Example of an invalid cycle:
+
+```yaml
+artifacts:
+  - path: spec/api_design.vibe
+    depends_on:
+      - spec/data_model.vibe
+
+  - path: spec/data_model.vibe
+    depends_on:
+      - spec/api_design.vibe
+```
+
+This is invalid because no topological ordering exists. A consumer or validation tool encountering this cycle MUST report an error.
+
+Recommended error code: `VIBE_CIRCULAR_DEPENDENCY`
+
+### 5.2 Section Circular Dependencies
+
+Circular dependencies among sections within a document are a warning, not an error.
 
 Example:
 
-    - path: src/main.ts
-      kind: typescript
-      depends_on:
-        - spec/10_architecture.md
-        - spec/20_artifacts.json
+```yaml
+sections:
+  - id: api_design
+    depends_on:
+      - data_model
+
+  - id: data_model
+    depends_on:
+      - api_design
+```
+
+This is a warning because sections exist within a single document and can be read in list order regardless. However, it indicates that the dependency declarations are not accurately representing the authoring order, and the author should revise them.
+
+### 5.3 Import Circular Dependencies
+
+Circular imports (document A imports document B which imports document A) are an error.
+
+See `VIBE_MERGE_SEMANTICS.md` for import resolution rules.
 
 ---
 
-## 3. Dependency Semantics
+## 6. Examples
 
-If artifact `A` depends on artifact `B`, then:
+### 6.1 Artifact Dependency Chain
 
-- `B` must exist before `A` is generated or finalized
-- `B` should satisfy its own invariants first if the runtime supports staged validation
-- the runtime should not generate `A` before prerequisites are satisfied
+A feature planning project with a clear dependency chain:
 
-Dependencies express execution order, not ownership or permission.
+```yaml
+artifacts:
+  - path: spec/00_overview.vibe
+    kind: vibe
+    description: Feature overview and goals
 
----
+  - path: spec/10_architecture.vibe
+    kind: vibe
+    description: Architecture and design decisions
+    depends_on:
+      - spec/00_overview.vibe
 
-## 4. Common Dependency Patterns
+  - path: spec/20_api_design.vibe
+    kind: vibe
+    description: API endpoint design
+    depends_on:
+      - spec/10_architecture.vibe
 
-## 4.1 Planning docs before manifest
+  - path: spec/30_data_model.vibe
+    kind: vibe
+    description: Database schema and data model
+    depends_on:
+      - spec/10_architecture.vibe
 
-Typical planning chain:
+  - path: spec/40_implementation_plan.vibe
+    kind: vibe
+    description: Implementation plan and task breakdown
+    depends_on:
+      - spec/20_api_design.vibe
+      - spec/30_data_model.vibe
+```
 
-- `spec/00_overview.md`
-- `spec/10_architecture.md`
-- `spec/20_artifacts.json`
-- `spec/30_workflow.json`
-- `spec/plan_manifest.json`
+Dependency graph:
 
-Example relationships:
+```
+00_overview
+    |
+10_architecture
+   / \
+20_api   30_data
+   \     /
+40_implementation
+```
 
-- `spec/plan_manifest.json` depends on:
-  - `spec/00_overview.md`
-  - `spec/10_architecture.md`
-  - `spec/20_artifacts.json`
-  - `spec/30_workflow.json`
+Valid processing orders include:
 
----
+- overview, architecture, api, data, implementation
+- overview, architecture, data, api, implementation
 
-## 4.2 Implementation depends on planning
+### 6.2 Section Dependencies Within a Document
 
-Typical implementation file dependencies:
+```yaml
+sections:
+  - id: problem_statement
+    type: analysis
+    title: Problem Statement
+    content: |
+      Users cannot reset their passwords without contacting support.
 
-- source files depend on architecture and artifact manifest
-- tests depend on implementation files and architecture docs
-- docs may depend on implementation state or planning docs
+  - id: solution_options
+    type: analysis
+    title: Solution Options
+    depends_on:
+      - problem_statement
+    content: |
+      Three approaches were considered: email-based reset, SMS-based
+      reset, and magic link authentication.
 
-Example:
+  - id: chosen_approach
+    type: decision
+    title: Chosen Approach
+    depends_on:
+      - solution_options
+    content: |
+      Decision: Use email-based password reset with time-limited tokens.
+      Rationale: Lowest implementation cost, highest user familiarity.
 
-    - path: src/main.ts
-      depends_on:
-        - spec/10_architecture.md
-        - spec/20_artifacts.json
+  - id: implementation_spec
+    type: specification
+    title: Implementation Specification
+    depends_on:
+      - chosen_approach
+    content: |
+      The reset flow requires three new API endpoints and a token
+      storage mechanism.
+```
 
-    - path: tests/main.test.ts
-      depends_on:
-        - src/main.ts
-        - spec/10_architecture.md
+### 6.3 Mixed Artifact and Section Dependencies
 
----
+A document can use both artifact-level and section-level dependencies:
 
-## 5. Runtime Ordering
+```yaml
+artifacts:
+  - path: spec/architecture.vibe
+    kind: vibe
+    description: Architecture document (external dependency)
 
-A runtime SHOULD build a dependency graph across artifacts.
+  - path: spec/auth_feature.vibe
+    kind: vibe
+    description: This document
+    depends_on:
+      - spec/architecture.vibe
 
-Recommended behavior:
+sections:
+  - id: context
+    type: analysis
+    title: Context
+    content: |
+      This feature builds on the architecture defined in
+      spec/architecture.vibe.
 
-1. collect artifact nodes
-2. collect dependency edges
-3. topologically sort
-4. generate/apply in valid order
-
-If no dependencies are declared, runtime may use source order or workflow order.
-
-Dependencies improve precision, but are not required for basic v1 programs.
-
----
-
-## 6. Missing Dependencies
-
-If an artifact depends on a path that is not defined or not present when required, the runtime should treat this as an execution or planning failure.
-
-Recommended error codes:
-
-- undefined dependency during compile → `VIBE_INVALID_PROGRAM`
-- dependency missing during execution → `VIBE_PLAN_OUTPUT_INVALID` or `VIBE_OPERATION_FAILED` depending on phase
-
-The exact error may vary by runtime stage.
-
----
-
-## 7. Cycles
-
-Dependency cycles are invalid.
-
-Example invalid cycle:
-
-- `src/main.ts` depends on `tests/main.test.ts`
-- `tests/main.test.ts` depends on `src/main.ts`
-
-A runtime SHOULD detect cycles before execution.
-
-Recommended error:
-
-    VIBE_INVALID_PROGRAM
-
----
-
-## 8. Dependency Scope
-
-Dependencies should usually refer to artifacts known to the program.
-
-Recommended scope:
-
-- artifact paths declared in `artifacts`
-- runtime-generated planning outputs
-- manifest-controlled files
-
-Dependencies should not be used to refer to arbitrary unknown files unless the runtime explicitly supports that model.
-
----
-
-## 9. Interaction with Workflow Steps
-
-Dependencies do not replace workflow steps.
-
-Instead:
-
-- workflow steps define what happens
-- dependencies define ordering constraints among artifacts
-
-For example:
-
-- a `plan` step may produce several planning docs
-- dependencies ensure `spec/plan_manifest.json` comes last
-- an `apply` step may then materialize implementation artifacts in dependency order
+  - id: design
+    type: specification
+    title: Design
+    depends_on:
+      - context
+    content: |
+      The authentication design follows the API gateway pattern
+      established in the architecture document.
+```
 
 ---
 
-## 10. Dependency Validation
+## 7. Transitive Dependencies
 
-A runtime SHOULD validate dependencies before generation.
+Dependencies are transitive. If artifact `A` depends on `B` and `B` depends on `C`, then `A` transitively depends on `C`.
 
-Recommended checks:
+Transitive dependencies do not need to be declared explicitly. They are implied by the dependency graph.
 
-- every dependency path is syntactically valid
-- dependency targets are known or resolvable
-- no cycles exist
-- topological ordering is possible
+Validation tools MAY compute the transitive closure of the dependency graph to:
 
-Optional checks:
-
-- dependency target invariants already satisfied
-- dependency target ownership allows required operation
+- verify that all transitive dependencies are satisfiable
+- detect long dependency chains that may indicate over-coupling
+- report the full set of prerequisites for a given artifact
 
 ---
 
-## 11. Transitive Dependencies
+## 8. Validation Rules
 
-Runtimes MAY reason about transitive dependencies.
+### 8.1 Required Checks
 
-Example:
+A validation tool processing dependencies MUST check:
 
-- `tests/main.test.ts` depends on `src/main.ts`
-- `src/main.ts` depends on `spec/10_architecture.md`
+1. Every `depends_on` path (artifact) or ID (section) references a known target
+2. No circular dependencies exist among artifacts
+3. No circular imports exist between documents
 
-This implies `tests/main.test.ts` transitively depends on `spec/10_architecture.md`
+### 8.2 Recommended Checks
 
-A runtime does not need to record transitive dependencies explicitly if topological ordering is already computed.
+A validation tool SHOULD also check:
 
----
-
-## 12. Recommended Patterns for VIBE Programs
-
-Recommended dependency conventions:
-
-Planning artifacts:
-
-- `spec/10_architecture.md` depends on `spec/00_overview.md`
-- `spec/20_artifacts.json` depends on `spec/10_architecture.md`
-- `spec/30_workflow.json` depends on `spec/20_artifacts.json`
-- `spec/plan_manifest.json` depends on all planning docs
-
-Implementation artifacts:
-
-- source files depend on architecture and artifacts manifest
-- test files depend on source files
-- generated docs depend on source or planning docs as appropriate
+1. Section circular dependencies (emit warning)
+2. Dependency targets have status `complete` or `draft` (not `abandoned`)
+3. Dependency chains are not excessively deep (suggested limit: 10 levels)
 
 ---
 
-## 13. Minimal Example
+## 9. Design Philosophy
 
-Example dependency declaration:
+AI planners and human reviewers both benefit from explicit ordering.
 
-    artifacts:
-      - path: spec/10_architecture.md
-        kind: markdown
+Without dependencies, the ordering of artifacts and sections is implicit -- determined by list position, naming conventions, or tribal knowledge. This is fragile and hard for AI systems to reason about consistently.
 
-      - path: spec/20_artifacts.json
-        kind: json
-        depends_on:
-          - spec/10_architecture.md
+Dependencies make ordering a first-class, machine-verifiable property of VIBE documents. They answer the question "what should I read or write first?" without requiring execution machinery.
 
-      - path: src/main.ts
-        kind: typescript
-        depends_on:
-          - spec/20_artifacts.json
-
-This ensures architecture is defined before artifact planning, and artifact planning is complete before implementation generation.
-
----
-
-## 14. Design Philosophy
-
-AI agents often struggle with implicit ordering.
-
-Dependencies make ordering explicit.
-
-That makes VIBE programs:
-
-- easier to reason about
-- easier to validate
-- safer to execute
-- more deterministic across runtimes
+In VIBE v2, dependencies are a planning tool, not an execution mechanism. They guide the order of thought, not the order of commands.

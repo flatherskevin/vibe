@@ -1,0 +1,327 @@
+vibe: 2.0
+
+meta:
+  name: vibe_v2_session_system
+  description: >
+    Session identification and management system for VIBE v2. Defines
+    session ID format, directory layout, metadata, concurrent safety,
+    and cross-session references.
+  session_id: 2026-03-10-a7f3b2
+  created_at: "2026-03-10"
+  author: claude
+  tags:
+    - sessions
+    - storage
+    - v2
+  status: draft
+
+context:
+  problem: |
+    Planning work happens across time. An AI might plan in one conversation,
+    a human reviews, then another AI (or the same one) continues. Sessions
+    group related .vibe documents together and provide continuity across
+    these interactions. The session system needs to be simple enough that
+    the file system is the only storage backend.
+
+  constraints: |
+    - Session IDs must be human-readable and sortable
+    - File system is the only storage backend (no database)
+    - Must support concurrent sessions (different directories)
+    - Must not require locking or coordination between sessions
+    - Must support cross-session references via imports
+
+  assumptions: |
+    - Most sessions contain 1-10 .vibe files
+    - Sessions are short-lived (hours to days, not months)
+    - Archiving is sufficient for lifecycle management (no deletion)
+    - One user/team per MCP server instance
+
+  scope: |
+    Covers session ID format, directory layout, metadata, lifecycle,
+    and cross-session references. MCP tool implementations are in
+    40_mcp_server.vibe.
+
+  glossary: |
+    - Session: A collection of related .vibe planning documents
+    - Session ID: Unique identifier in {date}-{hex} format
+    - session.json: Metadata file in each session directory
+    - Active session: A session in data/sessions/
+    - Archived session: A session moved to data/archive/
+
+sections:
+  - id: session_id_format
+    type: specification
+    title: Session ID Format
+    content: |
+      Format: {YYYY-MM-DD}-{6-char-hex}
+
+      Examples:
+        2026-03-10-a7f3b2
+        2026-03-10-4e91c8
+        2026-03-11-0b3f7a
+
+      Components:
+      - Date prefix: ISO date of session creation (YYYY-MM-DD)
+      - Separator: single hyphen
+      - Hex suffix: 6 lowercase hexadecimal characters from os.urandom(3)
+
+      Properties:
+      - Human-readable (date is visible)
+      - Chronologically sortable (date prefix sorts correctly)
+      - Collision-resistant (16.7 million possible per day)
+      - URL-safe and filesystem-safe (no special characters)
+      - Fixed length: 17 characters
+
+      Generation (Python):
+        import os
+        from datetime import date
+
+        def generate_session_id() -> str:
+            today = date.today().isoformat()
+            hex_suffix = os.urandom(3).hex()
+            return f"{today}-{hex_suffix}"
+
+  - id: directory_layout
+    type: specification
+    title: Directory Layout
+    content: |
+      Session storage uses a flat directory structure:
+
+        data/
+          sessions/
+            2026-03-10-a7f3b2/
+              session.json
+              00_vision.vibe
+              10_architecture.vibe
+              20_implementation.vibe
+            2026-03-10-4e91c8/
+              session.json
+              risk_assessment.vibe
+          archive/
+            2026-03-09-b1c2d3/
+              session.json
+              plan.vibe
+
+      Rules:
+      - Each session is a directory named by its session_id
+      - Active sessions live under data/sessions/
+      - Archived sessions live under data/archive/
+      - Each session directory contains exactly one session.json
+      - All other files in the directory are .vibe plan documents
+      - No subdirectories within a session (flat structure)
+      - File naming within a session is free-form but must end in .vibe
+
+      Recommended file naming convention:
+        {NN}_{name}.vibe where NN is a two-digit ordering prefix
+
+  - id: session_metadata
+    type: specification
+    title: Session Metadata (session.json)
+    content: |
+      Each session directory contains a session.json file:
+
+        {
+          "session_id": "2026-03-10-a7f3b2",
+          "name": "VIBE v2 Pivot Planning",
+          "description": "Planning documents for the v2 format pivot",
+          "tags": ["v2", "planning", "pivot"],
+          "status": "active",
+          "created_at": "2026-03-10T14:30:00Z",
+          "last_modified": "2026-03-10T16:45:00Z",
+          "files": [
+            {
+              "filename": "00_vision.vibe",
+              "created_at": "2026-03-10T14:30:00Z",
+              "modified_at": "2026-03-10T14:30:00Z"
+            }
+          ]
+        }
+
+      Fields:
+      - session_id: string (matches directory name)
+      - name: string (human-readable session name)
+      - description: string (optional, what this session is about)
+      - tags: string[] (optional, for filtering)
+      - status: "active" | "archived" (lifecycle state)
+      - created_at: string (ISO datetime)
+      - last_modified: string (ISO datetime, updated on any write)
+      - files: array of file metadata (updated on write_plan)
+
+      The files array is maintained by the MCP server's write_plan tool.
+      It tracks creation and modification times for each plan document.
+
+  - id: session_lifecycle
+    type: design
+    title: Session Lifecycle
+    content: |
+      Sessions have a simple lifecycle:
+
+        create -> active -> archive
+
+      ### Create
+      Triggered by create_session MCP tool.
+      1. Generate session ID
+      2. Create session directory
+      3. Write session.json with status: "active"
+
+      ### Active
+      The session is in use. Plans are written and read.
+      - write_plan adds/updates files and updates session.json
+      - read_plan reads files (no state change)
+      - get_session returns current state
+      - list_sessions includes this session
+
+      ### Archive
+      Triggered by archive_session MCP tool.
+      1. Move session directory from data/sessions/ to data/archive/
+      2. Update session.json status to "archived"
+      3. Archived sessions are excluded from list_sessions by default
+      4. Archived sessions can still be read via get_session and read_plan
+
+      There is no "delete" operation. Archived sessions are retained
+      indefinitely. Manual cleanup of data/archive/ is the user's
+      responsibility.
+
+  - id: concurrent_safety
+    type: design
+    title: Concurrent Safety Model
+    content: |
+      Each session owns its directory exclusively. The concurrent safety
+      model is simple:
+
+      - Different sessions never share files -> no cross-session conflicts
+      - Within a session, the MCP server is single-threaded (one request
+        at a time via stdio) -> no concurrent writes to the same file
+      - If multiple MCP server instances run simultaneously, they should
+        use different data directories
+
+      No file locking is needed. No coordination between sessions.
+      No transaction semantics. The file system provides atomicity for
+      individual file writes (write to temp file, rename).
+
+      Write safety within a session:
+        1. Write content to {session_dir}/.{filename}.tmp
+        2. Rename .{filename}.tmp to {filename}
+        3. Update session.json
+
+      This ensures that a crash during write leaves either the old file
+      or the new file, never a partial file.
+
+  - id: cross_session_references
+    type: specification
+    title: Cross-Session References
+    content: |
+      .vibe files can reference documents in other sessions via imports:
+
+        imports:
+          - sessions/2026-03-09-b1c2d3/architecture.vibe
+
+      Path resolution for cross-session imports:
+      - Relative to the data/ directory (the storage root)
+      - The importing file must know the session ID to reference
+
+      Use cases:
+      - Building on previous session's architecture decisions
+      - Referencing ADRs from a prior planning session
+      - Importing context from a related project's session
+
+      Limitations:
+      - Cross-session imports to archived sessions work (archive/ is
+        still readable) but create a dependency on retained archives
+      - No automatic tracking of cross-session dependencies
+      - Broken imports (deleted sessions) are handled gracefully by
+        the merge system (warning, not error)
+
+decisions:
+  - id: dec_id_format
+    title: Session ID uses date-hex format
+    status: proposed
+    context: |
+      Session IDs need to be unique, human-readable, sortable, and
+      filesystem-safe. Several formats were considered.
+    options:
+      - name: uuid
+        description: Standard UUID v4 (e.g., 550e8400-e29b-41d4-a716-446655440000)
+      - name: date_hex
+        description: "{YYYY-MM-DD}-{6-char-hex} (e.g., 2026-03-10-a7f3b2)"
+      - name: date_slug
+        description: "{YYYY-MM-DD}-{name-slug} (e.g., 2026-03-10-vibe-v2-pivot)"
+    chosen: date_hex
+    rationale: |
+      UUIDs are not human-readable. Date-slug requires sanitizing user
+      input and can create collisions. Date-hex is readable (date is
+      visible), sortable, collision-resistant (16M possibilities/day),
+      and fixed-length. The hex portion is short enough to reference
+      in conversation ("the a7f3b2 session").
+    consequences:
+      - 17-character fixed-length IDs
+      - Date is always visible in the ID
+      - Tiny collision probability (acceptable for single-user local tool)
+
+  - id: dec_flat_sessions
+    title: Flat directory structure within sessions
+    status: proposed
+    context: |
+      Should sessions support subdirectories for organizing plans,
+      or should all files be at the top level?
+    options:
+      - name: flat
+        description: All .vibe files directly in the session directory
+      - name: nested
+        description: Allow subdirectories within sessions for organization
+    chosen: flat
+    rationale: |
+      Sessions typically contain 1-10 files. Subdirectories add complexity
+      (path resolution, listing, cross-references) without meaningful
+      benefit at this scale. Numbered prefix naming (00_, 10_, 20_)
+      provides sufficient ordering.
+    consequences:
+      - Simple directory listing to find all plans
+      - File naming convention handles ordering
+      - Large sessions may feel cluttered (acceptable trade-off)
+
+  - id: dec_no_delete
+    title: No delete operation, only archive
+    status: proposed
+    context: |
+      Should sessions be deletable, or only archivable?
+    options:
+      - name: allow_delete
+        description: Provide both archive and delete operations
+      - name: archive_only
+        description: Only archive, manual cleanup for deletion
+    chosen: archive_only
+    rationale: |
+      Planning documents have historical value. Accidental deletion
+      of a session with important decisions could be costly. Archiving
+      preserves data while removing it from active listings. Users who
+      want to reclaim disk space can manually delete from data/archive/.
+    consequences:
+      - No data loss from MCP tool usage
+      - Archive directory may grow over time
+      - Manual cleanup is the user's responsibility
+
+quality:
+  - id: q_id_uniqueness
+    type: test
+    description: Session IDs are practically unique
+    criteria: |
+      - 3 bytes of randomness per ID (16.7M possibilities per day)
+      - Collision probability < 0.01% for 100 sessions per day
+      - ID generation uses os.urandom (cryptographically random)
+
+  - id: q_filesystem_safety
+    type: test
+    description: All file operations are crash-safe
+    criteria: |
+      - Writes use temp-file-then-rename pattern
+      - Partial writes never leave corrupt files
+      - session.json is always consistent with directory contents
+
+  - id: q_cross_session_works
+    type: test
+    description: Cross-session imports resolve correctly
+    criteria: |
+      - Import paths relative to data/ directory work
+      - Archived session imports still resolve
+      - Missing session imports produce warnings, not errors

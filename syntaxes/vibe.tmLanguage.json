@@ -29,7 +29,7 @@
       "patterns": [
         {
           "name": "meta.version.vibe",
-          "match": "^\\s*(vibe)\\s*:\\s*(1\\.0)\\s*$",
+          "match": "^\\s*(vibe)\\s*:\\s*(\\d+\\.\\d+)\\s*$",
           "captures": {
             "1": { "name": "keyword.other.version.vibe" },
             "2": { "name": "constant.numeric.version.vibe" }
@@ -42,7 +42,7 @@
       "patterns": [
         {
           "name": "keyword.control.section.vibe",
-          "match": "^\\s*(meta|imports|context|tools|artifacts|workflow|validation)\\s*:\\s*$",
+          "match": "^\\s*(meta|imports|context|tools|artifacts|workflow|validation|gates|validators|sources|scope|constraints|transforms|handoff)\\s*:\\s*$",
           "captures": {
             "1": { "name": "keyword.control.section.vibe" }
           }

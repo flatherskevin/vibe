@@ -1,39 +1,65 @@
-vibe: 1.0
+vibe: 2.0
+
+meta:
+  name: stdlib_context_budget
+  description: >
+    Context budgeting and compaction guidance for AI systems working with
+    VIBE documents. Helps AI maintain reliable planning across long sessions.
+  author: vibe
+  tags:
+    - stdlib
+    - context-management
+  status: final
 
 context:
-  context_budget_purpose: |
-    Context budgeting and compaction guidance for VIBE runtimes.
+  purpose: |
+    VIBE is AI-first. AI systems working with .vibe documents across long
+    planning sessions need explicit context management to remain reliable.
+    This module provides guidance for managing context windows effectively.
 
-    This module exists because VIBE is AI-first.
-    Long-running agent workflows need explicit context management to remain reliable.
+sections:
+  - id: budget_guidance
+    type: specification
+    title: Context Budget Guidance
+    content: |
+      When working with .vibe documents in a planning session:
 
-  max_tokens_per_step: 6000
+      Max tokens per planning step: ~6000 tokens
 
-  persistent_docs: |
-    [
-      "project.vibe",
-      "spec/00_overview.md",
-      "spec/10_architecture.md",
-      "spec/20_artifacts.json",
-      "spec/30_workflow.json",
-      "spec/plan_manifest.json"
-    ]
+      Persistent documents (keep in context):
+      - The current .vibe document being authored
+      - Imported .vibe documents referenced by the current document
+      - Relevant spec documents (VIBE_SPEC_v2.md at minimum)
 
-  compaction_strategy: |
-    After each meaningful step, the runtime should create a compact summary that includes:
-    - step id
-    - important tool results
-    - files changed
-    - remaining tasks
-    - current failure or risk notes
+      Compactable content (summarize when context is tight):
+      - Previous planning iterations
+      - Reviewed and finalized sections
+      - Resolved decisions
 
-    This summary should be written to:
+  - id: compaction_strategy
+    type: design
+    title: Compaction Strategy
+    content: |
+      After each meaningful planning step, create a compact summary:
+      - Current document status (draft/review/final)
+      - Sections completed vs remaining
+      - Key decisions made
+      - Open questions or risks
+      - Artifacts planned vs created
 
-    spec/runlog_compacted.md
+      This summary helps AI systems resume planning after context
+      compression or across conversation boundaries.
 
-  runtime_notes: |
-    Runtimes may treat these settings as guidance rather than strict requirements,
-    but they should preserve the overall intent:
-    - bounded context
-    - stable persistent planning docs
-    - explicit compaction output
+  - id: session_continuity
+    type: design
+    title: Session Continuity
+    content: |
+      When resuming work in a new conversation or after context compression:
+      1. Read the current .vibe document to restore state
+      2. Check meta.status to understand lifecycle position
+      3. Review sections for completed vs placeholder content
+      4. Check decisions for proposed vs accepted status
+      5. Review quality criteria for pass/fail status
+
+      The structured nature of .vibe documents makes them self-describing
+      state snapshots, reducing the need for external state tracking.

@@ -1,0 +1,10 @@
+services:
+  vibe-mcp:
+    build: .
+    stdin_open: true
+    volumes:
+      - ./data/sessions:/app/data/sessions
+      - ./data/archive:/app/data/archive
+      - ../vibe/spec:/app/vibe/spec:ro
+      - ../vibe/stdlib:/app/vibe/stdlib:ro
+      - ../vibe/schema:/app/vibe/schema:ro

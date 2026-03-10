@@ -1,437 +1,552 @@
-# VIBE Error Taxonomy (v1.0)
+# VIBE Error Taxonomy (v2.0)
 
-This document defines standard error codes for VIBE runtimes.
+This document defines standard error codes for VIBE v2 document validation.
 
-These codes allow VIBE tooling, orchestrators, and users to reason about failures consistently across implementations.
+VIBE v2 is a document format, not an execution format. Errors in v2 relate to document parsing, schema validation, import resolution, field merging, and MCP server operations -- not runtime execution.
 
-A compliant runtime SHOULD emit these error codes whenever applicable.
-
----
-
-## 1. Goals
-
-The VIBE error taxonomy exists to provide:
-
-- deterministic failure categories
-- portable runtime behavior
-- easier debugging
-- machine-readable run diagnostics
-- consistent policy enforcement
-
-Errors should be structured whenever possible.
-
-A runtime SHOULD return errors with at least:
-
-- `code`
-- `message`
-
-Optional fields:
-
-- `path`
-- `line`
-- `step_id`
-- `details`
-- `evidence`
+These codes allow VIBE tooling, validators, MCP servers, and editors to report problems consistently.
 
 ---
 
-## 2. Parse Errors
+## 1. Error Format
 
-## `VIBE_PARSE_ERROR`
+Every VIBE error should include at minimum:
 
-The runtime could not parse a `.vibe` file.
+| Field | Required | Description |
+|---|---|---|
+| `code` | Yes | Error code (e.g. `PARSE_INVALID_YAML`) |
+| `message` | Yes | Human-readable description |
+| `severity` | Yes | `fatal`, `error`, or `warning` |
 
-Examples:
+Optional fields for additional context:
 
-- invalid indentation
-- tab characters where not allowed
-- malformed key/value syntax
-- invalid list syntax
-- malformed block scalar usage
+| Field | Description |
+|---|---|
+| `path` | File path where the error occurred |
+| `line` | Line number in the file |
+| `field` | YAML field path (e.g. `meta.status`, `sections[2].type`) |
+| `details` | Structured object with additional information |
 
-Typical response:
+Example structured error:
 
-    {
-      "code": "VIBE_PARSE_ERROR",
-      "message": "Invalid indentation in project.vibe",
-      "path": "project.vibe",
-      "line": 12
-    }
-
----
-
-## 3. Import Errors
-
-## `VIBE_IMPORT_NOT_FOUND`
-
-A referenced import could not be resolved.
-
-Examples:
-
-- missing file
-- wrong relative path
-- inaccessible imported module
-
----
-
-## `VIBE_IMPORT_CYCLE`
-
-An import cycle was detected in the program graph.
-
-Examples:
-
-- `project.vibe` imports `a.vibe`
-- `a.vibe` imports `b.vibe`
-- `b.vibe` imports `a.vibe`
-
-Execution must not continue after an import cycle is detected.
+```json
+{
+  "code": "SCHEMA_INVALID_FIELD",
+  "message": "Invalid section type 'summary' at sections[2].type",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "line": 45,
+  "field": "sections[2].type",
+  "details": {
+    "value": "summary",
+    "allowed": ["analysis", "design", "decision", "specification", "risk", "checklist"]
+  }
+}
+```
 
 ---
 
-## 4. Merge Errors
+## 2. Severity Levels
 
-## `VIBE_MERGE_CONFLICT`
+### fatal
 
-Two or more files declared incompatible values during merge.
+The document cannot be processed further. Parsing or import resolution failed at a level that prevents any meaningful validation.
 
-Examples:
+Default for: `PARSE_*` errors, `IMPORT_CYCLE`.
 
-- duplicate artifact path
-- duplicate validator id
-- conflicting `meta.name`
-- conflicting workflow mode
+### error
 
----
+The document has a structural or content problem that must be fixed. The document is parseable but does not conform to the v2 schema or has merge conflicts.
 
-## `VIBE_INVALID_PROGRAM`
+Default for: `SCHEMA_*` errors, `IMPORT_NOT_FOUND`, `MERGE_*` errors, most `MCP_*` errors.
 
-The compiled program is structurally invalid.
+### warning
 
-Examples:
+The document is valid but has a potential issue worth noting. Warnings do not prevent the document from being used.
 
-- missing `workflow`
-- missing `meta`
-- invalid workflow mode
-- invalid ownership value
-- duplicate step ids after normalization
-
-This is broader than a merge conflict and refers to program invalidity after parse and merge are complete.
+Default for: Advisory issues such as empty sections, missing optional fields, or unused imports.
 
 ---
 
-## 5. Schema Errors
+## 3. PARSE_* -- YAML Parsing Failures
 
-## `VIBE_INVALID_SCHEMA`
+Errors that occur when the `.vibe` file cannot be parsed as valid YAML.
 
-A schema declared by the program is itself invalid.
+---
 
-Examples:
+### PARSE_INVALID_YAML
 
-- malformed JSON schema
-- unsupported schema structure
-- invalid schema reference path
+The file contains invalid YAML syntax.
+
+Severity: `fatal`
+
+Causes:
+- Invalid indentation
+- Malformed key-value syntax
+- Unclosed quotes or block scalars
+- Tab characters where spaces are expected
+- Invalid list syntax
+
+Example:
+
+```json
+{
+  "code": "PARSE_INVALID_YAML",
+  "message": "Invalid YAML: unexpected end of stream at line 24",
+  "severity": "fatal",
+  "path": "plans/feature_a.vibe",
+  "line": 24
+}
+```
+
+---
+
+### PARSE_ENCODING_ERROR
+
+The file is not valid UTF-8 or contains unsupported encoding.
+
+Severity: `fatal`
+
+Causes:
+- Binary content in a `.vibe` file
+- Non-UTF-8 encoding (Latin-1, UTF-16 without BOM detection)
+- Null bytes in the file
+
+Example:
+
+```json
+{
+  "code": "PARSE_ENCODING_ERROR",
+  "message": "File is not valid UTF-8 encoding",
+  "severity": "fatal",
+  "path": "plans/feature_a.vibe"
+}
+```
+
+---
+
+## 4. SCHEMA_* -- Schema Validation Failures
+
+Errors that occur when a parsed YAML document does not conform to the VIBE v2 schema (`vibe/schema/vibe.schema.json`).
+
+---
+
+### SCHEMA_MISSING_VERSION
+
+The required `vibe` version field is missing from the document.
+
+Severity: `error`
+
+Every `.vibe` file must have a top-level `vibe` field. Without it, the file cannot be identified as a VIBE document.
+
+Example:
+
+```json
+{
+  "code": "SCHEMA_MISSING_VERSION",
+  "message": "Missing required field: vibe",
+  "severity": "error",
+  "path": "plans/feature_a.vibe"
+}
+```
+
+---
+
+### SCHEMA_INVALID_FIELD
+
+A field value does not match its schema definition.
+
+Severity: `error`
+
+Causes:
+- Wrong type (string where array expected, etc.)
+- Value not in allowed enum
+- Missing required subfields
+- Pattern mismatch (e.g. `session_id` format)
+
+Example:
+
+```json
+{
+  "code": "SCHEMA_INVALID_FIELD",
+  "message": "Invalid value for meta.status: 'active' is not one of [draft, review, final]",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "field": "meta.status",
+  "details": {
+    "value": "active",
+    "allowed": ["draft", "review", "final"]
+  }
+}
+```
+
+---
+
+### SCHEMA_UNKNOWN_TYPE
+
+A section, quality criterion, or other typed field uses a type value not defined in the schema.
+
+Severity: `error`
+
+Causes:
+- Misspelled section type (e.g. `analaysis` instead of `analysis`)
+- Using v1 types not present in v2
+- Custom types not supported by the schema
+
+Example:
+
+```json
+{
+  "code": "SCHEMA_UNKNOWN_TYPE",
+  "message": "Unknown section type 'summary' at sections[3].type",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "field": "sections[3].type",
+  "details": {
+    "value": "summary",
+    "allowed_section_types": ["analysis", "design", "decision", "specification", "risk", "checklist"],
+    "allowed_quality_types": ["review", "test", "metric", "checklist"],
+    "allowed_decision_statuses": ["proposed", "accepted", "deprecated", "superseded"]
+  }
+}
+```
+
+---
+
+### SCHEMA_INVALID_STATUS
+
+A status field has a value not in the allowed set for its context.
+
+Severity: `error`
 
 This applies to:
-
-- tool schemas
-- outputs schemas
-- manifest schema references
-- validator schemas
-
----
-
-## 6. Planning Errors
-
-## `VIBE_PLAN_OUTPUT_INVALID`
-
-A planning step emitted output that did not conform to its declared schema.
-
-Examples:
-
-- missing required fields in step outputs
-- invalid JSON shape
-- extra properties when forbidden
-
----
-
-## `VIBE_PLAN_MANIFEST_MISSING`
-
-A plan manifest was required but was not produced.
+- `meta.status` (must be `draft`, `review`, or `final`)
+- `decisions[].status` (must be `proposed`, `accepted`, `deprecated`, or `superseded`)
+- `artifacts[].status` (must be `planned`, `in_progress`, or `complete`)
 
 Example:
 
-- workflow mode is `plan_and_apply`
-- `spec/plan_manifest.json` does not exist after planning
+```json
+{
+  "code": "SCHEMA_INVALID_STATUS",
+  "message": "Invalid artifact status 'done' at artifacts[1].status",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "field": "artifacts[1].status",
+  "details": {
+    "value": "done",
+    "allowed": ["planned", "in_progress", "complete"]
+  }
+}
+```
 
 ---
 
-## `VIBE_PLAN_MANIFEST_INVALID`
+## 5. IMPORT_* -- Import Resolution Failures
 
-The plan manifest exists but is invalid.
-
-Examples:
-
-- not parseable as JSON
-- fails schema validation
-- missing required fields such as `operations`
+Errors that occur when resolving the `imports` array.
 
 ---
 
-## 7. Budget and Limit Errors
+### IMPORT_NOT_FOUND
 
-## `VIBE_BUDGET_EXCEEDED`
+A referenced import file does not exist.
 
-The runtime exceeded a declared budget.
+Severity: `error`
 
-Examples:
-
-- max steps exceeded
-- max tool calls exceeded
-- max files changed exceeded
-- diff budget exceeded
-
-Optional details may include the specific budget that was violated.
+Causes:
+- Typo in the import path
+- File was moved or deleted
+- Wrong relative path
 
 Example:
 
-    {
-      "code": "VIBE_BUDGET_EXCEEDED",
-      "message": "Diff budget exceeded",
-      "details": {
-        "max_lines_added": 200,
-        "actual_lines_added": 312
-      }
-    }
+```json
+{
+  "code": "IMPORT_NOT_FOUND",
+  "message": "Import not found: vibe/stdlib/quality_criteria.vibe",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "field": "imports[0]",
+  "details": {
+    "import_path": "vibe/stdlib/quality_criteria.vibe",
+    "searched_from": "plans/feature_a.vibe"
+  }
+}
+```
 
 ---
 
-## 8. Tool Errors
+### IMPORT_CYCLE
 
-## `VIBE_TOOL_NOT_ALLOWED`
+A circular import was detected in the import graph.
 
-The current step attempted to use a tool that was not allowed.
+Severity: `fatal`
 
-Examples:
+Import cycles make merge resolution impossible. If A imports B and B imports A (directly or transitively), the cycle must be broken before the document can be processed.
 
-- `exec.run` called in a step with only `fs.write`
-- undeclared tool called by the runtime
+Example:
 
----
-
-## `VIBE_TOOL_ARGS_INVALID`
-
-A tool call failed argument validation.
-
-Examples:
-
-- missing required `path`
-- invalid argument type
-- extra unexpected fields
+```json
+{
+  "code": "IMPORT_CYCLE",
+  "message": "Circular import detected: a.vibe -> b.vibe -> a.vibe",
+  "severity": "fatal",
+  "details": {
+    "cycle": ["a.vibe", "b.vibe", "a.vibe"]
+  }
+}
+```
 
 ---
 
-## `VIBE_TOOL_RESULT_INVALID`
+### IMPORT_INVALID_PATH
 
-A tool returned a result that did not match its declared schema.
+An import path is syntactically invalid.
 
-Examples:
+Severity: `error`
 
-- missing required result fields
-- invalid field types
-- malformed tool result object
+Causes:
+- Path traversal outside repository root (`../../../etc/passwd`)
+- Absolute paths where relative paths are expected
+- Non-`.vibe` file extension
+- Empty string
 
----
+Example:
 
-## `VIBE_TOOL_FAILURE`
-
-The tool itself failed to execute.
-
-Examples:
-
-- file not found
-- patch failed to apply
-- command returned infrastructure error
-- shell execution unavailable
-
-`VIBE_TOOL_FAILURE` does not necessarily mean the model behaved incorrectly. It may indicate an external execution problem.
-
----
-
-## 9. Gate Errors
-
-## `VIBE_GATE_FAILURE`
-
-A gate check failed.
-
-Examples:
-
-- required file not found
-- command exited non-zero
-- JSON schema gate failed
-- forbidden pattern found
-- diff budget exceeded for step
-
-Gate failures should ideally include:
-
-- which gate failed
-- what evidence caused the failure
-- which step was affected
+```json
+{
+  "code": "IMPORT_INVALID_PATH",
+  "message": "Import path must be relative and end with .vibe: /etc/config.yaml",
+  "severity": "error",
+  "path": "plans/feature_a.vibe",
+  "field": "imports[2]",
+  "details": {
+    "import_path": "/etc/config.yaml"
+  }
+}
+```
 
 ---
 
-## 10. Validation Errors
+## 6. MERGE_* -- Field Merge Conflicts
 
-## `VIBE_VALIDATION_FAILURE`
-
-One or more validators failed after planning or apply.
-
-Examples:
-
-- `file_tree` validator failed
-- `json_schema` validator failed
-- test command failed
-- content rules were violated
-
-This error indicates that the program did not satisfy its completion contract.
+Errors that occur when merging fields from imported documents.
 
 ---
 
-## 11. Apply Errors
+### MERGE_DUPLICATE_ID
 
-## `VIBE_OPERATION_NOT_PERMITTED`
+Two or more elements across imported documents share the same ID within the same array scope.
 
-A requested manifest operation violated runtime policy.
+Severity: `error`
 
-Examples:
+This applies to:
+- Section IDs (must be unique across merged `sections` array)
+- Decision IDs (must be unique across merged `decisions` array)
+- Quality criterion IDs (must be unique across merged `quality` array)
 
-- write outside allowed scope
-- modification of protected artifact
-- forbidden path
-- blocked command execution
+Example:
 
----
-
-## `VIBE_OPERATION_FAILED`
-
-An operation listed in the manifest could not be applied.
-
-Examples:
-
-- patch rejected
-- file write failed
-- directory create failed
-- delete failed
-
-This error means the operation was allowed in principle but failed in execution.
-
----
-
-## `VIBE_NON_MANIFEST_CHANGE_ATTEMPT`
-
-A runtime or agent attempted to change repository state outside the approved manifest.
-
-Examples:
-
-- direct write not listed in `spec/plan_manifest.json`
-- undeclared file modification during apply
-
-This is a serious runtime enforcement failure and should usually abort execution immediately.
+```json
+{
+  "code": "MERGE_DUPLICATE_ID",
+  "message": "Duplicate section ID 'overview' found in plans/feature_a.vibe and vibe/stdlib/templates/overview.vibe",
+  "severity": "error",
+  "details": {
+    "id": "overview",
+    "scope": "sections",
+    "sources": [
+      "plans/feature_a.vibe",
+      "vibe/stdlib/templates/overview.vibe"
+    ]
+  }
+}
+```
 
 ---
 
-## 12. Security Errors
+### MERGE_DUPLICATE_PATH
 
-A runtime MAY use existing error codes for security failures, but SHOULD prefer the following mapping:
+Two or more artifacts across imported documents declare the same file path.
 
-- forbidden path write → `VIBE_OPERATION_NOT_PERMITTED`
-- blocked command → `VIBE_OPERATION_NOT_PERMITTED`
-- invalid traversal path → `VIBE_OPERATION_NOT_PERMITTED`
+Severity: `error`
 
-A separate security namespace is not required in v1, but runtimes may extend it.
+Artifact paths must be unique across the merged document. If two imported files both declare an artifact at the same path, the conflict must be resolved manually.
 
----
+Example:
 
-## 13. Error Severity
-
-Runtimes MAY annotate errors with severity.
-
-Suggested severities:
-
-- `fatal`
-- `error`
-- `warning`
-- `info`
-
-Recommended defaults:
-
-- parse/import/merge/program/schema errors → `fatal`
-- gate/validation/apply/tool errors → `error`
-- advisory compaction/logging issues → `warning`
-
-Severity is optional in v1.
+```json
+{
+  "code": "MERGE_DUPLICATE_PATH",
+  "message": "Duplicate artifact path 'src/auth/service.py' found in plans/auth.vibe and plans/feature_a.vibe",
+  "severity": "error",
+  "details": {
+    "path": "src/auth/service.py",
+    "scope": "artifacts",
+    "sources": [
+      "plans/auth.vibe",
+      "plans/feature_a.vibe"
+    ]
+  }
+}
+```
 
 ---
 
-## 14. Error Reporting Format
+## 7. MCP_* -- MCP Server Errors
 
-Recommended structured format:
-
-    {
-      "code": "VIBE_GATE_FAILURE",
-      "message": "Required file not found",
-      "step_id": "plan_manifest",
-      "details": {
-        "gate_type": "file_exists",
-        "path": "spec/plan_manifest.json"
-      },
-      "evidence": {
-        "tool": "fs.list",
-        "result": { ... }
-      }
-    }
-
-This format is recommended but not strictly required.
+Errors that occur when a VIBE MCP server processes requests for `.vibe` documents.
 
 ---
 
-## 15. Runtime Behavior on Error
+### MCP_SESSION_NOT_FOUND
 
-Recommended runtime behavior:
+A referenced MCP session ID does not exist or has expired.
 
-- parse/import/merge/program errors:
-  - stop immediately
-- planning errors:
-  - follow retry policy if applicable
-- tool/gate/validation errors:
-  - follow step retry policy if applicable
-- non-manifest or forbidden operations:
-  - abort immediately
+Severity: `error`
 
-A runtime SHOULD not continue silently after a fatal error.
+Causes:
+- Importing from a session that no longer exists
+- Mistyped session ID
+- Session data has been cleaned up
 
----
+Example:
 
-## 16. Extensibility
-
-Runtimes may define additional custom error codes, but SHOULD preserve all standard VIBE codes.
-
-Custom codes should preferably use a namespaced pattern such as:
-
-    VIBE_VENDOR_CUSTOM_ERROR
-
-This avoids collisions while preserving portability.
+```json
+{
+  "code": "MCP_SESSION_NOT_FOUND",
+  "message": "MCP session not found: 2026-03-08-f4e5d6",
+  "severity": "error",
+  "details": {
+    "session_id": "2026-03-08-f4e5d6"
+  }
+}
+```
 
 ---
 
-## 17. Design Philosophy
+### MCP_FILE_NOT_FOUND
 
-VIBE errors are intended to make failures:
+The MCP server could not locate a requested `.vibe` file.
 
-- explicit
-- machine-readable
-- actionable
-- enforceable
+Severity: `error`
 
-AI systems are often vague when they fail.
+Causes:
+- File does not exist at the specified path
+- File was deleted after being referenced
+- Incorrect path provided to the MCP tool
 
-VIBE runtimes should not be vague.
+Example:
+
+```json
+{
+  "code": "MCP_FILE_NOT_FOUND",
+  "message": "File not found: plans/feature_a.vibe",
+  "severity": "error",
+  "details": {
+    "path": "plans/feature_a.vibe"
+  }
+}
+```
+
+---
+
+### MCP_INVALID_YAML
+
+The MCP server received or read content that is not valid YAML.
+
+Severity: `error`
+
+This is the MCP-layer equivalent of `PARSE_INVALID_YAML`. It is emitted when the MCP server itself detects the parsing failure (as opposed to an external validator).
+
+Example:
+
+```json
+{
+  "code": "MCP_INVALID_YAML",
+  "message": "Content provided to write_vibe is not valid YAML",
+  "severity": "error",
+  "details": {
+    "tool": "write_vibe",
+    "parse_error": "unexpected end of stream at line 12"
+  }
+}
+```
+
+---
+
+### MCP_FILESYSTEM_ERROR
+
+The MCP server encountered a filesystem error while reading or writing a `.vibe` file.
+
+Severity: `error`
+
+Causes:
+- Permission denied
+- Disk full
+- Path too long
+- Read-only filesystem
+
+Example:
+
+```json
+{
+  "code": "MCP_FILESYSTEM_ERROR",
+  "message": "Permission denied writing to plans/feature_a.vibe",
+  "severity": "error",
+  "details": {
+    "operation": "write",
+    "path": "plans/feature_a.vibe",
+    "os_error": "EACCES: permission denied"
+  }
+}
+```
+
+---
+
+## 8. Error Reporting Best Practices
+
+### Report all errors, not just the first
+
+When validating a document, collect all errors and report them together. Stopping at the first error forces repeated validation cycles.
+
+### Include file path and line number when available
+
+Location information dramatically reduces debugging time. YAML parsers typically provide line numbers for syntax errors. Schema validators can map field paths back to approximate line numbers.
+
+### Use structured errors for tooling
+
+Emit errors as structured JSON when consumed by tools, editors, or MCP servers. Use human-readable messages when displayed to users.
+
+### Map errors to editor diagnostics
+
+For VS Code and similar editors, VIBE errors map to diagnostics:
+
+| Severity | Editor Diagnostic |
+|---|---|
+| `fatal` | Error (red) |
+| `error` | Error (red) |
+| `warning` | Warning (yellow) |
+
+---
+
+## 9. Relationship to v1 Errors
+
+VIBE v2 removes the following v1 error categories that related to runtime execution:
+
+- `VIBE_PLAN_OUTPUT_INVALID` (no plan phase)
+- `VIBE_PLAN_MANIFEST_MISSING` (no manifests)
+- `VIBE_PLAN_MANIFEST_INVALID` (no manifests)
+- `VIBE_BUDGET_EXCEEDED` (no execution budgets)
+- `VIBE_TOOL_NOT_ALLOWED` (no tool definitions)
+- `VIBE_TOOL_ARGS_INVALID` (no tool definitions)
+- `VIBE_TOOL_RESULT_INVALID` (no tool definitions)
+- `VIBE_TOOL_FAILURE` (no tool execution)
+- `VIBE_GATE_FAILURE` (no gates)
+- `VIBE_VALIDATION_FAILURE` (no runtime validators)
+- `VIBE_OPERATION_NOT_PERMITTED` (no apply phase)
+- `VIBE_OPERATION_FAILED` (no apply phase)
+- `VIBE_NON_MANIFEST_CHANGE_ATTEMPT` (no manifest enforcement)
+
+VIBE v2 errors focus exclusively on document validity: can this `.vibe` file be parsed, does it conform to the schema, do its imports resolve, and do its fields merge cleanly?

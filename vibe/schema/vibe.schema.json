@@ -1,110 +1,249 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://vibe-lang.org/schema/v1",
-  "title": "VIBE Compiled Specification",
-  "description": "Schema for compiled AI work specification files (.vibe)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vibe-lang.org/schema/v2",
+  "title": "VIBE Document",
+  "description": "Schema for VIBE v2 document files (.vibe)",
   "type": "object",
-  "required": ["meta"],
+  "required": ["vibe"],
   "properties": {
+    "vibe": {
+      "type": ["string", "number"],
+      "description": "VIBE version identifier (must be 2.0)"
+    },
+
     "meta": {
       "type": "object",
-      "description": "Metadata describing the compiled specification",
-      "required": ["name", "version"],
+      "description": "Document metadata",
       "properties": {
         "name": {
           "type": "string",
-          "description": "Unique name for this specification"
-        },
-        "version": {
-          "type": ["string", "number"],
-          "description": "Version of the specification"
+          "description": "Document identifier"
         },
         "description": {
           "type": "string",
-          "description": "Human-readable description of the work"
+          "description": "Human-readable purpose of the document"
+        },
+        "session_id": {
+          "type": "string",
+          "description": "Links to MCP session ({YYYY-MM-DD}-{6-char-hex})",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{6}$"
+        },
+        "created_at": {
+          "type": "string",
+          "description": "ISO date or datetime of creation"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "ISO date or datetime of last update"
         },
         "author": {
           "type": "string",
-          "description": "Author or generator of the specification"
+          "description": "Author identifier (e.g. claude, human, agent id)"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Freeform categorization tags",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "type": "string",
+          "description": "Document lifecycle status",
+          "enum": ["draft", "review", "final"]
         }
-      },
-      "additionalProperties": false
+      }
     },
 
-    "sources": {
+    "imports": {
       "type": "array",
-      "description": "Artifacts used during compilation",
+      "description": "List of .vibe file paths to import and merge",
       "items": {
         "type": "string"
       }
     },
 
-    "scope": {
+    "context": {
       "type": "object",
-      "description": "Defines repository scope for the compiled work",
+      "description": "Problem statement, constraints, assumptions, scope, glossary, and freeform contextual data",
       "properties": {
-        "include": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "problem": {
+          "type": "string",
+          "description": "What problem is being solved"
         },
-        "exclude": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "constraints": {
+          "type": "string",
+          "description": "Boundaries and limitations"
+        },
+        "assumptions": {
+          "type": "string",
+          "description": "Assumptions underlying the plan"
+        },
+        "scope": {
+          "type": "string",
+          "description": "What is and is not covered"
+        },
+        "glossary": {
+          "type": "string",
+          "description": "Term definitions"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": true
     },
 
     "artifacts": {
-      "type": "object",
-      "description": "Expected outputs from the compiled work",
-      "properties": {
-        "outputs": {
-          "type": "array",
-          "items": {
-            "type": "string"
+      "type": "array",
+      "description": "List of artifact declarations with acceptance criteria",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File or directory path"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Artifact type (python, typescript, markdown, yaml, etc.)"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this artifact is for"
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "Artifact paths this depends on",
+            "items": { "type": "string" }
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "description": "Conditions that define when this artifact is done",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "description": "Artifact tracking status",
+            "enum": ["planned", "in_progress", "complete"]
           }
         }
-      },
-      "additionalProperties": false
-    },
-
-    "constraints": {
-      "type": "object",
-      "description": "Constraints for downstream systems",
-      "additionalProperties": {
-        "type": ["string", "number", "boolean"]
       }
     },
 
-    "transforms": {
-      "type": "object",
-      "description": "Optional transformations derived during compilation",
-      "additionalProperties": {
-        "type": ["string", "number", "boolean"]
+    "sections": {
+      "type": "array",
+      "description": "Ordered list of document sections",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique section identifier within the document"
+          },
+          "type": {
+            "type": "string",
+            "description": "Section content type",
+            "enum": ["analysis", "design", "decision", "specification", "risk", "checklist"]
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable section heading"
+          },
+          "content": {
+            "type": "string",
+            "description": "Section body content (multiline YAML string)"
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "Section IDs this section builds on",
+            "items": { "type": "string" }
+          }
+        }
       }
     },
 
-    "validation": {
-      "type": "object",
-      "description": "Conditions that must hold true after execution",
-      "additionalProperties": {
-        "type": ["string", "number", "boolean"]
+    "decisions": {
+      "type": "array",
+      "description": "Architecture Decision Records",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique decision identifier within the document"
+          },
+          "title": {
+            "type": "string",
+            "description": "One-line decision summary"
+          },
+          "status": {
+            "type": "string",
+            "description": "Decision lifecycle status",
+            "enum": ["proposed", "accepted", "deprecated", "superseded"]
+          },
+          "context": {
+            "type": "string",
+            "description": "Why this decision is needed"
+          },
+          "options": {
+            "type": "array",
+            "description": "Alternatives considered",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Option identifier"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "What this option entails"
+                }
+              }
+            }
+          },
+          "chosen": {
+            "type": "string",
+            "description": "Name of the chosen option"
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Why this option was chosen"
+          },
+          "consequences": {
+            "type": "array",
+            "description": "What follows from this choice",
+            "items": { "type": "string" }
+          }
+        }
       }
     },
 
-    "handoff": {
-      "type": "object",
-      "description": "Information for downstream systems consuming the compiled spec",
-      "additionalProperties": {
-        "type": ["string", "number", "boolean"]
+    "quality": {
+      "type": "array",
+      "description": "Quality criteria that define done",
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique quality criterion identifier"
+          },
+          "type": {
+            "type": "string",
+            "description": "Quality criterion type",
+            "enum": ["review", "test", "metric", "checklist"]
+          },
+          "description": {
+            "type": "string",
+            "description": "What is being checked"
+          },
+          "criteria": {
+            "type": "string",
+            "description": "How to determine pass/fail"
+          }
+        }
       }
     }
   },
-
   "additionalProperties": false
 }

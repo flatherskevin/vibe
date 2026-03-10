@@ -1,5 +1,5 @@
 {
   "yaml.schemas": {
-    "./vibe/schema/vibe.schema.json": "*.vibe"
+    "./vibe/schema/vibe.schema.json": "**/*.vibe"
   }
 }

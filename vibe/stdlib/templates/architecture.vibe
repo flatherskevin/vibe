@@ -1,0 +1,102 @@
+vibe: 2.0
+
+meta:
+  name: "[system_name]_architecture"
+  description: "[Technical architecture for a system or component]"
+  author: "[claude | human | agent-id]"
+  tags:
+    - architecture
+  status: draft
+
+context:
+  problem: |
+    [Describe the technical problem or capability gap this architecture addresses]
+
+  constraints: |
+    [List technical constraints: performance, compatibility, infrastructure, etc.]
+
+  assumptions: |
+    [List technical assumptions: available services, team expertise, etc.]
+
+  scope: |
+    [Define what systems/components are covered]
+
+  glossary: |
+    [Define technical terms specific to this architecture]
+
+artifacts:
+  - path: "[path/to/main/artifact]"
+    kind: "[language]"
+    description: "[Primary artifact description]"
+    status: planned
+    acceptance_criteria:
+      - "[Criterion 1]"
+      - "[Criterion 2]"
+
+sections:
+  - id: current_state
+    type: analysis
+    title: Current State
+    content: |
+      [Describe the current architecture or system state.
+      What exists today? What are its limitations?]
+
+  - id: proposed_design
+    type: design
+    title: Proposed Design
+    content: |
+      [Describe the target architecture. Include component relationships,
+      data flow, and integration points.]
+
+  - id: data_model
+    type: design
+    title: Data Model
+    content: |
+      [Define the data structures, schemas, or models.
+      Include relationships and constraints.]
+
+  - id: api_design
+    type: specification
+    title: API Design
+    content: |
+      [Specify interfaces, endpoints, protocols, or contracts.
+      Include request/response formats.]
+
+  - id: technical_risks
+    type: risk
+    title: Technical Risks
+    content: |
+      [Identify technical risks: scalability limits, single points of failure,
+      dependency risks, security considerations.]
+
+decisions:
+  - id: dec_primary_approach
+    title: "[Primary architectural decision]"
+    status: proposed
+    context: |
+      [Why this decision is needed]
+    options:
+      - name: "[option_a]"
+        description: "[Description of option A]"
+      - name: "[option_b]"
+        description: "[Description of option B]"
+    chosen: "[chosen_option]"
+    rationale: |
+      [Why this option was chosen]
+    consequences:
+      - "[Consequence 1]"
+
+quality:
+  - id: q_design_complete
+    type: review
+    description: Architecture covers all integration points
+    criteria: |
+      Every external dependency and integration point is documented
+      with interface details.
+
+  - id: q_risks_mitigated
+    type: review
+    description: All identified risks have mitigation strategies
+    criteria: |
+      Each risk in the technical risks section has at least one
+      mitigation or acceptance rationale.
