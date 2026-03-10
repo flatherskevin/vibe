@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vibe-lang.org/schema/v2",
   "title": "VIBE Document",
-  "description": "Schema for VIBE v2 document files (.vibe)",
+  "description": "Schema for VIBE v2 document files (.vibe.md). Validates the parsed dict representation, whether sourced from YAML frontmatter + markdown body or pure YAML.",
   "type": "object",
   "required": ["vibe"],
   "properties": {
@@ -55,7 +55,7 @@
 
     "imports": {
       "type": "array",
-      "description": "List of .vibe file paths to import and merge",
+      "description": "List of .vibe.md file paths to import and merge",
       "items": {
         "type": "string"
       }
@@ -148,7 +148,7 @@
           },
           "content": {
             "type": "string",
-            "description": "Section body content (multiline YAML string)"
+            "description": "Section body content (markdown text)"
           },
           "depends_on": {
             "type": "array",

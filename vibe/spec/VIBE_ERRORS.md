@@ -14,7 +14,7 @@ Every VIBE error should include at minimum:
 
 | Field | Required | Description |
 |---|---|---|
-| `code` | Yes | Error code (e.g. `PARSE_INVALID_YAML`) |
+| `code` | Yes | Error code (e.g. `PARSE_INVALID_VIBE_MD`) |
 | `message` | Yes | Human-readable description |
 | `severity` | Yes | `fatal`, `error`, or `warning` |
 
@@ -24,7 +24,7 @@ Optional fields for additional context:
 |---|---|
 | `path` | File path where the error occurred |
 | `line` | Line number in the file |
-| `field` | YAML field path (e.g. `meta.status`, `sections[2].type`) |
+| `field` | Frontmatter field path (e.g. `meta.status`, `sections[2].type`) |
 | `details` | Structured object with additional information |
 
 Example structured error:
@@ -34,7 +34,7 @@ Example structured error:
   "code": "SCHEMA_INVALID_FIELD",
   "message": "Invalid section type 'summary' at sections[2].type",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "line": 45,
   "field": "sections[2].type",
   "details": {
@@ -70,13 +70,13 @@ Default for: Advisory issues such as empty sections, missing optional fields, or
 
 ## 3. PARSE_* -- YAML Parsing Failures
 
-Errors that occur when the `.vibe` file cannot be parsed as valid YAML.
+Errors that occur when the `.vibe.md` file cannot be parsed as valid YAML frontmatter.
 
 ---
 
-### PARSE_INVALID_YAML
+### PARSE_INVALID_VIBE_MD
 
-The file contains invalid YAML syntax.
+The file contains invalid YAML frontmatter syntax.
 
 Severity: `fatal`
 
@@ -86,15 +86,16 @@ Causes:
 - Unclosed quotes or block scalars
 - Tab characters where spaces are expected
 - Invalid list syntax
+- Missing or malformed frontmatter delimiters
 
 Example:
 
 ```json
 {
-  "code": "PARSE_INVALID_YAML",
-  "message": "Invalid YAML: unexpected end of stream at line 24",
+  "code": "PARSE_INVALID_VIBE_MD",
+  "message": "Invalid YAML frontmatter: unexpected end of stream at line 24",
   "severity": "fatal",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "line": 24
 }
 ```
@@ -108,7 +109,7 @@ The file is not valid UTF-8 or contains unsupported encoding.
 Severity: `fatal`
 
 Causes:
-- Binary content in a `.vibe` file
+- Binary content in a `.vibe.md` file
 - Non-UTF-8 encoding (Latin-1, UTF-16 without BOM detection)
 - Null bytes in the file
 
@@ -119,7 +120,7 @@ Example:
   "code": "PARSE_ENCODING_ERROR",
   "message": "File is not valid UTF-8 encoding",
   "severity": "fatal",
-  "path": "plans/feature_a.vibe"
+  "path": "plans/feature_a.vibe.md"
 }
 ```
 
@@ -127,7 +128,7 @@ Example:
 
 ## 4. SCHEMA_* -- Schema Validation Failures
 
-Errors that occur when a parsed YAML document does not conform to the VIBE v2 schema (`vibe/schema/vibe.schema.json`).
+Errors that occur when a parsed .vibe.md document does not conform to the VIBE v2 schema (`vibe/schema/vibe.schema.json`).
 
 ---
 
@@ -137,7 +138,7 @@ The required `vibe` version field is missing from the document.
 
 Severity: `error`
 
-Every `.vibe` file must have a top-level `vibe` field. Without it, the file cannot be identified as a VIBE document.
+Every `.vibe.md` file must have a top-level `vibe` field in the YAML frontmatter. Without it, the file cannot be identified as a VIBE document.
 
 Example:
 
@@ -146,7 +147,7 @@ Example:
   "code": "SCHEMA_MISSING_VERSION",
   "message": "Missing required field: vibe",
   "severity": "error",
-  "path": "plans/feature_a.vibe"
+  "path": "plans/feature_a.vibe.md"
 }
 ```
 
@@ -171,7 +172,7 @@ Example:
   "code": "SCHEMA_INVALID_FIELD",
   "message": "Invalid value for meta.status: 'active' is not one of [draft, review, final]",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "field": "meta.status",
   "details": {
     "value": "active",
@@ -200,7 +201,7 @@ Example:
   "code": "SCHEMA_UNKNOWN_TYPE",
   "message": "Unknown section type 'summary' at sections[3].type",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "field": "sections[3].type",
   "details": {
     "value": "summary",
@@ -231,7 +232,7 @@ Example:
   "code": "SCHEMA_INVALID_STATUS",
   "message": "Invalid artifact status 'done' at artifacts[1].status",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "field": "artifacts[1].status",
   "details": {
     "value": "done",
@@ -264,13 +265,13 @@ Example:
 ```json
 {
   "code": "IMPORT_NOT_FOUND",
-  "message": "Import not found: vibe/stdlib/quality_criteria.vibe",
+  "message": "Import not found: vibe/stdlib/quality_criteria.vibe.md",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "field": "imports[0]",
   "details": {
-    "import_path": "vibe/stdlib/quality_criteria.vibe",
-    "searched_from": "plans/feature_a.vibe"
+    "import_path": "vibe/stdlib/quality_criteria.vibe.md",
+    "searched_from": "plans/feature_a.vibe.md"
   }
 }
 ```
@@ -290,10 +291,10 @@ Example:
 ```json
 {
   "code": "IMPORT_CYCLE",
-  "message": "Circular import detected: a.vibe -> b.vibe -> a.vibe",
+  "message": "Circular import detected: a.vibe.md -> b.vibe.md -> a.vibe.md",
   "severity": "fatal",
   "details": {
-    "cycle": ["a.vibe", "b.vibe", "a.vibe"]
+    "cycle": ["a.vibe.md", "b.vibe.md", "a.vibe.md"]
   }
 }
 ```
@@ -309,7 +310,7 @@ Severity: `error`
 Causes:
 - Path traversal outside repository root (`../../../etc/passwd`)
 - Absolute paths where relative paths are expected
-- Non-`.vibe` file extension
+- Non-`.vibe.md` file extension
 - Empty string
 
 Example:
@@ -317,9 +318,9 @@ Example:
 ```json
 {
   "code": "IMPORT_INVALID_PATH",
-  "message": "Import path must be relative and end with .vibe: /etc/config.yaml",
+  "message": "Import path must be relative and end with .vibe.md: /etc/config.yaml",
   "severity": "error",
-  "path": "plans/feature_a.vibe",
+  "path": "plans/feature_a.vibe.md",
   "field": "imports[2]",
   "details": {
     "import_path": "/etc/config.yaml"
@@ -351,14 +352,14 @@ Example:
 ```json
 {
   "code": "MERGE_DUPLICATE_ID",
-  "message": "Duplicate section ID 'overview' found in plans/feature_a.vibe and vibe/stdlib/templates/overview.vibe",
+  "message": "Duplicate section ID 'overview' found in plans/feature_a.vibe.md and vibe/stdlib/templates/overview.vibe.md",
   "severity": "error",
   "details": {
     "id": "overview",
     "scope": "sections",
     "sources": [
-      "plans/feature_a.vibe",
-      "vibe/stdlib/templates/overview.vibe"
+      "plans/feature_a.vibe.md",
+      "vibe/stdlib/templates/overview.vibe.md"
     ]
   }
 }
@@ -379,14 +380,14 @@ Example:
 ```json
 {
   "code": "MERGE_DUPLICATE_PATH",
-  "message": "Duplicate artifact path 'src/auth/service.py' found in plans/auth.vibe and plans/feature_a.vibe",
+  "message": "Duplicate artifact path 'src/auth/service.py' found in plans/auth.vibe.md and plans/feature_a.vibe.md",
   "severity": "error",
   "details": {
     "path": "src/auth/service.py",
     "scope": "artifacts",
     "sources": [
-      "plans/auth.vibe",
-      "plans/feature_a.vibe"
+      "plans/auth.vibe.md",
+      "plans/feature_a.vibe.md"
     ]
   }
 }
@@ -396,7 +397,7 @@ Example:
 
 ## 7. MCP_* -- MCP Server Errors
 
-Errors that occur when a VIBE MCP server processes requests for `.vibe` documents.
+Errors that occur when a VIBE MCP server processes requests for `.vibe.md` documents.
 
 ---
 
@@ -428,7 +429,7 @@ Example:
 
 ### MCP_FILE_NOT_FOUND
 
-The MCP server could not locate a requested `.vibe` file.
+The MCP server could not locate a requested `.vibe.md` file.
 
 Severity: `error`
 
@@ -442,30 +443,30 @@ Example:
 ```json
 {
   "code": "MCP_FILE_NOT_FOUND",
-  "message": "File not found: plans/feature_a.vibe",
+  "message": "File not found: plans/feature_a.vibe.md",
   "severity": "error",
   "details": {
-    "path": "plans/feature_a.vibe"
+    "path": "plans/feature_a.vibe.md"
   }
 }
 ```
 
 ---
 
-### MCP_INVALID_YAML
+### MCP_INVALID_VIBE_MD
 
-The MCP server received or read content that is not valid YAML.
+The MCP server received or read content that is not valid .vibe.md content.
 
 Severity: `error`
 
-This is the MCP-layer equivalent of `PARSE_INVALID_YAML`. It is emitted when the MCP server itself detects the parsing failure (as opposed to an external validator).
+This is the MCP-layer equivalent of `PARSE_INVALID_VIBE_MD`. It is emitted when the MCP server itself detects the parsing failure (as opposed to an external validator).
 
 Example:
 
 ```json
 {
-  "code": "MCP_INVALID_YAML",
-  "message": "Content provided to write_vibe is not valid YAML",
+  "code": "MCP_INVALID_VIBE_MD",
+  "message": "Content provided to write_vibe is not valid .vibe.md content",
   "severity": "error",
   "details": {
     "tool": "write_vibe",
@@ -478,7 +479,7 @@ Example:
 
 ### MCP_FILESYSTEM_ERROR
 
-The MCP server encountered a filesystem error while reading or writing a `.vibe` file.
+The MCP server encountered a filesystem error while reading or writing a `.vibe.md` file.
 
 Severity: `error`
 
@@ -493,11 +494,11 @@ Example:
 ```json
 {
   "code": "MCP_FILESYSTEM_ERROR",
-  "message": "Permission denied writing to plans/feature_a.vibe",
+  "message": "Permission denied writing to plans/feature_a.vibe.md",
   "severity": "error",
   "details": {
     "operation": "write",
-    "path": "plans/feature_a.vibe",
+    "path": "plans/feature_a.vibe.md",
     "os_error": "EACCES: permission denied"
   }
 }

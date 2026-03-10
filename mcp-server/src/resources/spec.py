@@ -54,37 +54,43 @@ _FORMAT_REFERENCE = """\
 # VIBE v2 Condensed Format Reference
 
 ## File Structure
-Every .vibe file is valid YAML beginning with `vibe: 2.0`.
+Every .vibe.md file is a markdown document with YAML frontmatter.
+It has two parts: frontmatter (between `---` delimiters) and a markdown body.
 
-## Top-Level Fields
+## Frontmatter Fields (YAML between --- delimiters)
 | Field | Required | Type |
 |-------|----------|------|
-| vibe | Yes | number (2.0) |
+| vibe | Yes | string ("2.0") |
 | meta | No | object |
-| imports | No | array of strings |
-| context | No | object |
-| artifacts | No | array of objects |
-| sections | No | array of objects |
-| decisions | No | array of objects |
-| quality | No | array of objects |
+| imports | No | array of strings (.vibe.md paths) |
+
+## Markdown Body Sections
+| Section | Format |
+|---------|--------|
+| ## Context | ### subheadings as keys, content as values |
+| ## Artifacts | Markdown table (Path required) |
+| ## Sections | ### headings with <!-- id, type, depends_on --> comments |
+| ## Decisions | ### headings with <!-- id, status --> and bold-label body |
+| ## Quality | Markdown table (ID, Description required) |
 
 ## meta Fields
 name, description, session_id, created_at, updated_at, author, tags, status
 
-## context Fields
-problem, constraints, assumptions, scope, glossary (+ additional properties allowed)
+## context Keys (from ### headings, slugified)
+problem, constraints, assumptions, scope, glossary (+ freeform keys)
 
-## artifacts[] Fields
-path, kind, description, depends_on, acceptance_criteria, status (planned|in_progress|complete)
+## Artifacts Table Columns
+Path, Kind, Description, Status (planned|in_progress|complete), Depends On, Acceptance Criteria
 
-## sections[] Fields (id and title required)
-id, type (analysis|design|decision|specification|risk|checklist), title, content, depends_on
+## Sections Metadata (in <!-- --> comments)
+id (required), type (analysis|design|decision|specification|risk|checklist), depends_on
 
-## decisions[] Fields (id and title required)
-id, title, status (proposed|accepted|deprecated|superseded), context, options[], chosen, rationale, consequences[]
+## Decisions Metadata and Body
+Comment: <!-- id, status (proposed|accepted|deprecated|superseded) -->
+Body: **Context:**, **Options:** (- **name**: desc), **Chosen:**, **Rationale:**, **Consequences:**
 
-## quality[] Fields (id and description required)
-id, type (review|test|metric|checklist), description, criteria
+## Quality Table Columns
+ID (required), Description (required), Type (review|test|metric|checklist), Criteria
 
 ## Session ID Format
 {YYYY-MM-DD}-{6-char-hex} (e.g. 2026-03-10-a1b2c3)
@@ -96,11 +102,11 @@ draft -> review -> final
 
 # Template archetypes and their file paths relative to vibe/stdlib/templates/
 _TEMPLATE_ARCHETYPES = {
-    "overview": "overview.vibe",
-    "architecture": "architecture.vibe",
-    "implementation_plan": "implementation_plan.vibe",
-    "risk_assessment": "risk_assessment.vibe",
-    "adr_collection": "adr_collection.vibe",
+    "overview": "overview.vibe.md",
+    "architecture": "architecture.vibe.md",
+    "implementation_plan": "implementation_plan.vibe.md",
+    "risk_assessment": "risk_assessment.vibe.md",
+    "adr_collection": "adr_collection.vibe.md",
 }
 
 
@@ -119,7 +125,7 @@ def register_spec_resources(mcp: FastMCP) -> None:
         """The VIBE v2 specification document.
 
         Returns the full VIBE specification markdown document that defines
-        the .vibe file format, top-level fields, and document model.
+        the .vibe.md file format, frontmatter fields, and document model.
         """
         # Try v2 spec first, fall back to v1
         for name in ("VIBE_SPEC_v2.md", "VIBE_SPEC_v1.md"):
@@ -133,8 +139,8 @@ def register_spec_resources(mcp: FastMCP) -> None:
     async def spec_format() -> str:
         """Condensed VIBE v2 format reference.
 
-        A quick-reference summary of the VIBE v2 document format
-        including all top-level fields, their types, and allowed values.
+        A quick-reference summary of the VIBE v2 .vibe.md document format
+        including frontmatter fields, body sections, and allowed values.
         """
         return _FORMAT_REFERENCE
 
@@ -147,10 +153,10 @@ def register_spec_resources(mcp: FastMCP) -> None:
     async def stdlib_quality() -> str:
         """The VIBE standard library quality criteria module.
 
-        Contains reusable quality criteria that any .vibe document can import.
+        Contains reusable quality criteria that any .vibe.md document can import.
         Criteria IDs are prefixed with stdlib_ to avoid collisions.
         """
-        path = vibe_dir / "stdlib" / "quality.vibe"
+        path = vibe_dir / "stdlib" / "quality.vibe.md"
         return _read_file_safe(path)
 
 

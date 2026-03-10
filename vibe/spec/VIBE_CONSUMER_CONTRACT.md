@@ -1,6 +1,6 @@
 # VIBE Consumer Contract (v2.0)
 
-This document defines the required and recommended behaviors for any system that reads `.vibe` files.
+This document defines the required and recommended behaviors for any system that reads `.vibe.md` files.
 
 In v1 this document was called the Runtime Contract and defined execution semantics. In v2 there is no runtime. Instead, this document specifies how consumers -- humans, AI systems, IDEs, CI pipelines, and other tools -- should parse, validate, and interpret VIBE documents.
 
@@ -8,16 +8,16 @@ In v1 this document was called the Runtime Contract and defined execution semant
 
 ## 1. What Is a Consumer?
 
-A consumer is any system that reads `.vibe` files. Consumers do not execute .vibe files. They read and interpret them.
+A consumer is any system that reads `.vibe.md` files. Consumers do not execute .vibe.md files. They read and interpret them.
 
 Examples of consumers:
 
-- A human reading a .vibe file in an editor
-- An AI system loading a .vibe file to understand a plan
+- A human reading a .vibe.md file in an editor
+- An AI system loading a .vibe.md file to understand a plan
 - An execution tool reading artifacts and context to implement a plan
 - An IDE providing syntax highlighting and structure preview
-- A CI pipeline validating .vibe files against the schema
-- The VIBE MCP server reading and writing .vibe documents
+- A CI pipeline validating .vibe.md files against the schema
+- The VIBE MCP server reading and writing .vibe.md documents
 
 All consumers MUST follow the parsing requirements in this document. Consumers that resolve imports MUST follow the import resolution and merge behavior rules.
 
@@ -25,13 +25,13 @@ All consumers MUST follow the parsing requirements in this document. Consumers t
 
 ## 2. Parsing Requirements
 
-### 2.1 YAML
+### 2.1 YAML Frontmatter
 
-`.vibe` files use YAML syntax. Consumers MUST parse them as YAML 1.2.
+`.vibe.md` files use markdown with YAML frontmatter syntax. Consumers MUST parse the frontmatter as YAML 1.2.
 
 ### 2.2 Encoding
 
-All `.vibe` files MUST be UTF-8 encoded. Consumers MUST reject files that are not valid UTF-8.
+All `.vibe.md` files MUST be UTF-8 encoded. Consumers MUST reject files that are not valid UTF-8.
 
 ### 2.3 Indentation
 
@@ -39,7 +39,7 @@ Indentation MUST use spaces. Tabs are not permitted. Consumers SHOULD reject fil
 
 ### 2.4 Version Check
 
-Every `.vibe` file MUST begin with a `vibe` field at the top level.
+Every `.vibe.md` file MUST begin with a `vibe` field at the top level of the YAML frontmatter.
 
 ```yaml
 vibe: 2.0
@@ -72,10 +72,10 @@ Consumers that process the `imports` field MUST resolve imports according to the
 Import paths are relative to the directory containing the importing file.
 
 ```yaml
-# In file: plans/architecture.vibe
+# In file: plans/architecture.vibe.md
 imports:
-  - ../vibe/stdlib/quality.vibe    # resolves to vibe/stdlib/quality.vibe
-  - shared_context.vibe            # resolves to plans/shared_context.vibe
+  - ../vibe/stdlib/quality.vibe.md    # resolves to vibe/stdlib/quality.vibe.md
+  - shared_context.vibe.md            # resolves to plans/shared_context.vibe.md
 ```
 
 Absolute paths (starting with `/`) are forbidden. See section 7 for security requirements.
@@ -113,7 +113,7 @@ If an imported file does not exist, consumers SHOULD raise an error. Consumers M
 
 ## 4. Merge Behavior
 
-When a root .vibe file imports other .vibe files, the documents are merged field by field. The root file's values take precedence where conflicts occur.
+When a root .vibe.md file imports other .vibe.md files, the documents are merged field by field. The root file's values take precedence where conflicts occur.
 
 Merge happens after recursive import resolution. The result is a single logical document containing the combined content of all files in the import chain.
 
@@ -235,7 +235,7 @@ Criteria that define "done" for the document or its artifacts. Consumers should 
 
 ### 6.1 Schema Validation
 
-VIBE v2 provides a JSON Schema at `vibe/schema/vibe.schema.json`. Consumers SHOULD validate .vibe files against this schema.
+VIBE v2 provides a JSON Schema at `vibe/schema/vibe.schema.json`. Consumers SHOULD validate .vibe.md files against this schema.
 
 Schema validation checks:
 
@@ -246,7 +246,7 @@ Schema validation checks:
 
 ### 6.2 Advisory Validation
 
-Schema validation is advisory, not blocking. A .vibe file that fails schema validation is still a valid YAML file and MAY still contain useful content.
+Schema validation is advisory, not blocking. A .vibe.md file that fails schema validation is still a valid document and MAY still contain useful content.
 
 Consumers SHOULD:
 
@@ -282,7 +282,7 @@ Consumers MUST enforce path safety when resolving imports.
 
 Forbidden patterns:
 
-- Absolute paths: `/etc/passwd`, `/home/user/secrets.vibe`
+- Absolute paths: `/etc/passwd`, `/home/user/secrets.vibe.md`
 - Parent traversal beyond the project root: `../../../../etc/passwd`
 - Paths containing null bytes or other control characters
 
@@ -290,17 +290,17 @@ Consumers SHOULD resolve import paths to canonical form and verify they remain w
 
 ### 7.2 Path Traversal
 
-The `..` path component is permitted for navigating within a project (for example, `../vibe/stdlib/quality.vibe`). However, consumers MUST ensure that the resolved path does not escape the project root directory.
+The `..` path component is permitted for navigating within a project (for example, `../vibe/stdlib/quality.vibe.md`). However, consumers MUST ensure that the resolved path does not escape the project root directory.
 
-Consumers SHOULD define a project root (typically the directory containing `project.vibe` or the repository root) and reject any import that resolves to a path outside this root.
+Consumers SHOULD define a project root (typically the directory containing `project.vibe.md` or the repository root) and reject any import that resolves to a path outside this root.
 
 ### 7.3 Content Safety
 
-`.vibe` files are data documents, not executable code. Consumers MUST NOT execute any content within a .vibe file. String fields may contain code snippets as documentation, but these are for human reading, not execution.
+`.vibe.md` files are data documents, not executable code. Consumers MUST NOT execute any content within a .vibe.md file. String fields may contain code snippets as documentation, but these are for human reading, not execution.
 
 ### 7.4 Size Limits
 
-Consumers MAY impose reasonable size limits on .vibe files and import chains to prevent resource exhaustion. Recommended limits:
+Consumers MAY impose reasonable size limits on .vibe.md files and import chains to prevent resource exhaustion. Recommended limits:
 
 - Individual file size: 1 MB
 - Total import chain size: 10 MB
@@ -317,3 +317,4 @@ These limits are recommendations. Consumers should document their limits.
 - `VIBE_DOCUMENT_TYPES.md` -- Section type and quality type definitions.
 - `VIBE_ERRORS.md` -- Error codes for parse, schema, and import failures.
 - `VIBE_INTEGRATION_HOOKS.md` -- How specific consumer types (IDE, CI, MCP) integrate.
+

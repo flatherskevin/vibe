@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "VIBE Markdown",
+  "scopeName": "text.html.markdown.vibe",
+  "patterns": [
+    { "include": "#frontmatter" },
+    { "include": "#vibeComments" },
+    { "include": "text.html.markdown" }
+  ],
+  "repository": {
+    "frontmatter": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.frontmatter.vibe",
+          "begin": "\\A---\\s*$",
+          "end": "^---\\s*$",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.frontmatter.begin.vibe" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.frontmatter.end.vibe" }
+          },
+          "patterns": [
+            {
+              "name": "meta.version.vibe",
+              "match": "^\\s*(vibe)\\s*:\\s*(\"?\\d+\\.\\d+\"?)\\s*$",
+              "captures": {
+                "1": { "name": "keyword.other.version.vibe" },
+                "2": { "name": "constant.numeric.version.vibe" }
+              }
+            },
+            { "include": "source.yaml" }
+          ]
+        }
+      ]
+    },
+
+    "vibeComments": {
+      "patterns": [
+        {
+          "name": "meta.vibe.section-metadata.vibe",
+          "match": "<!--\\s*(id:\\s*[\\w]+(?:\\s*,\\s*(?:type|status|depends_on):\\s*[\\w,\\s]+)*)\\s*-->",
+          "captures": {
+            "0": { "name": "comment.block.html.vibe" },
+            "1": { "name": "entity.other.attribute-name.vibe" }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,2 @@
+[console_scripts]
+vibe-mcp = src.server:main

@@ -2,7 +2,7 @@
 
 Handles creation, listing, retrieval, and archival of planning sessions.
 Each session is a directory under data/sessions/{id}/ containing a session.json
-metadata file and zero or more .vibe plan files.
+metadata file and zero or more .vibe.md plan files.
 """
 
 import json
@@ -119,7 +119,7 @@ class SessionManager:
         return results
 
     def get_session(self, session_id: str) -> dict[str, Any]:
-        """Retrieve session metadata and list of .vibe plan files.
+        """Retrieve session metadata and list of .vibe.md plan files.
 
         Raises RuntimeError with SESSION_NOT_FOUND if the session does not exist.
         """
@@ -134,9 +134,9 @@ class SessionManager:
         except (json.JSONDecodeError, OSError) as exc:
             raise RuntimeError(f"{FILESYSTEM_ERROR}: {exc}") from exc
 
-        # Discover .vibe files in the session directory
+        # Discover .vibe.md files in the session directory
         vibe_files = sorted(
-            str(p.name) for p in session_dir.glob("*.vibe")
+            str(p.name) for p in session_dir.glob("*.vibe.md")
         )
         meta["vibe_files"] = vibe_files
         return meta

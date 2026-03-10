@@ -1,8 +1,8 @@
 {
   "name": "vibe-lang-highlighter",
   "displayName": "VIBE Language Support",
-  "description": "Syntax highlighting and basic editor config for .vibe files (VIBE v1).",
-  "version": "0.0.1",
+  "description": "Syntax highlighting and editor config for .vibe.md files (VIBE v2).",
+  "version": "0.1.0",
   "publisher": "vibe",
   "engines": {
     "vscode": "^1.80.0"
@@ -11,17 +11,17 @@
   "contributes": {
     "languages": [
       {
-        "id": "vibe",
+        "id": "vibe-md",
         "aliases": ["VIBE", "vibe"],
-        "extensions": [".vibe"],
+        "extensions": [".vibe.md"],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "vibe",
-        "scopeName": "source.vibe",
-        "path": "./syntaxes/vibe.tmLanguage.json"
+        "language": "vibe-md",
+        "scopeName": "text.html.markdown.vibe",
+        "path": "./syntaxes/vibe-md.tmLanguage.json"
       }
     ]
   }

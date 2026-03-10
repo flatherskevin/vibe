@@ -2,14 +2,14 @@
 
 VIBE defines a **structured document format** for AI-driven planning.
 
-A `.vibe` file is a YAML document that captures what problem is being solved, what will be built or changed, how it was reasoned about, and what "done" looks like. Documents are the output of AI planning, consumed by humans reviewing plans, other AI agents continuing work, and execution tools that need structured instructions.
+A `.vibe.md` file is a markdown document with YAML frontmatter that captures what problem is being solved, what will be built or changed, how it was reasoned about, and what "done" looks like. Documents are the output of AI planning, consumed by humans reviewing plans, other AI agents continuing work, and execution tools that need structured instructions.
 
 ---
 
 ## Document Model
 
 ```
-.vibe document
+.vibe.md document
     |
 Write (AI or human creates document)
     |
@@ -20,7 +20,7 @@ Review (humans or AI review sections, decisions, quality)
 Import (other documents can import and build on this one)
 ```
 
-A `.vibe` document may import other `.vibe` documents. Imports are merged by simple field concatenation (not compiled into a Program IR as in v1). Imported content is additive: arrays are concatenated, scalars from the importing document take precedence.
+A `.vibe.md` document may import other `.vibe.md` documents. Imports are merged by simple field concatenation (not compiled into a Program IR as in v1). Imported content is additive: arrays are concatenated, scalars from the importing document take precedence.
 
 VIBE v2 replaces the v1 execution model (`parse -> compile -> plan -> apply -> validate`) with a document-oriented model. There is no runtime, no workflow engine, and no apply phase. Documents are the deliverable.
 
@@ -28,15 +28,15 @@ VIBE v2 replaces the v1 execution model (`parse -> compile -> plan -> apply -> v
 
 ## File Format
 
-`.vibe` files use YAML syntax.
+`.vibe.md` files use markdown with YAML frontmatter syntax.
 
-Every `.vibe` file must begin with a version declaration:
+Every `.vibe.md` file must begin with a version declaration in the frontmatter:
 
 ```yaml
 vibe: 2.0
 ```
 
-Files must be valid YAML and should validate against `vibe/schema/vibe.schema.json`.
+Files must contain valid YAML frontmatter and should validate against `vibe/schema/vibe.schema.json`.
 
 ---
 
@@ -46,7 +46,7 @@ Files must be valid YAML and should validate against `vibe/schema/vibe.schema.js
 |---|---|---|
 | `vibe` | Yes | Version identifier. Must be `2.0`. |
 | `meta` | Recommended | Document metadata: name, description, author, status, tags. |
-| `imports` | No | Array of `.vibe` file paths to import. |
+| `imports` | No | Array of `.vibe.md` file paths to import. |
 | `context` | No | Problem statement, constraints, assumptions, scope, glossary. |
 | `artifacts` | No | Array of planned or tracked file artifacts. |
 | `sections` | No | Array of typed content blocks (analysis, design, specification, etc.). |
@@ -57,7 +57,7 @@ Files must be valid YAML and should validate against `vibe/schema/vibe.schema.js
 
 ## vibe
 
-The version field is required at the top level of every `.vibe` file.
+The version field is required at the top level of every `.vibe.md` file.
 
 ```yaml
 vibe: 2.0
@@ -102,13 +102,13 @@ meta:
 
 ## imports
 
-Array of `.vibe` file paths. Imported documents are merged into the importing document by concatenating arrays and inheriting fields not already defined.
+Array of `.vibe.md` file paths. Imported documents are merged into the importing document by concatenating arrays and inheriting fields not already defined.
 
 ```yaml
 imports:
-  - vibe/stdlib/quality.vibe
-  - vibe/stdlib/context_budget.vibe
-  - ./shared_context.vibe
+  - vibe/stdlib/quality.vibe.md
+  - vibe/stdlib/context_budget.vibe.md
+  - ./shared_context.vibe.md
 ```
 
 ### Import rules
@@ -373,7 +373,7 @@ quality:
     type: test
     description: Document validates against v2 schema
     criteria: |
-      This .vibe file passes validation against vibe/schema/vibe.schema.json.
+      This .vibe.md file passes validation against vibe/schema/vibe.schema.json.
 
   - id: token_expiration_tested
     type: metric
@@ -409,8 +409,8 @@ VIBE v2 ships a standard library under `vibe/stdlib/`:
 
 | Module | Purpose |
 |---|---|
-| `quality.vibe` | Reusable quality criteria for common document checks (YAML validity, schema validation, metadata completeness, section typing, decision completeness, import resolution). |
-| `context_budget.vibe` | Context budgeting and compaction guidance for AI systems working with `.vibe` documents across long planning sessions. |
+| `quality.vibe.md` | Reusable quality criteria for common document checks (frontmatter validity, schema validation, metadata completeness, section typing, decision completeness, import resolution). |
+| `context_budget.vibe.md` | Context budgeting and compaction guidance for AI systems working with `.vibe.md` documents across long planning sessions. |
 
 ### Template library
 
@@ -418,11 +418,11 @@ VIBE v2 ships a standard library under `vibe/stdlib/`:
 
 | Template | Purpose |
 |---|---|
-| `overview.vibe` | Project overview and problem framing. |
-| `architecture.vibe` | System architecture and component design. |
-| `implementation_plan.vibe` | Step-by-step implementation plan with artifacts and ordering. |
-| `risk_assessment.vibe` | Risk identification, analysis, and mitigation planning. |
-| `adr_collection.vibe` | Collection of Architecture Decision Records. |
+| `overview.vibe.md` | Project overview and problem framing. |
+| `architecture.vibe.md` | System architecture and component design. |
+| `implementation_plan.vibe.md` | Step-by-step implementation plan with artifacts and ordering. |
+| `risk_assessment.vibe.md` | Risk identification, analysis, and mitigation planning. |
+| `adr_collection.vibe.md` | Collection of Architecture Decision Records. |
 
 Templates are starting points. Copy and modify them rather than importing directly.
 
@@ -432,7 +432,7 @@ Templates are starting points. Copy and modify them rather than importing direct
 
 ### Normative (consumers and tooling MUST follow)
 
-- `VIBE_CONSUMER_CONTRACT.md` -- Required consumer behaviors for tools that read `.vibe` documents.
+- `VIBE_CONSUMER_CONTRACT.md` -- Required consumer behaviors for tools that read `.vibe.md` documents.
 - `VIBE_MERGE_SEMANTICS.md` -- How imports are merged: array concatenation, scalar precedence, conflict rules.
 - `VIBE_ERRORS.md` -- Standard error taxonomy for validation and parsing failures.
 
@@ -440,14 +440,14 @@ Templates are starting points. Copy and modify them rather than importing direct
 
 - `VIBE_DOCUMENT_TYPES.md` -- Guidance on common document archetypes and when to use each.
 - `VIBE_DEPENDENCIES.md` -- Artifact and section dependency semantics.
-- `VIBE_AUTHORING_GUIDE.md` -- Guidance for humans and AIs authoring `.vibe` documents.
+- `VIBE_AUTHORING_GUIDE.md` -- Guidance for humans and AIs authoring `.vibe.md` documents.
 - `VIBE_REFERENCE_DOCUMENT.md` -- Canonical example document demonstrating all v2 features.
 
 ### Integration (for tooling and multi-agent workflows)
 
-- `VIBE_INTEGRATION_HOOKS.md` -- How external tools can consume, validate, and act on `.vibe` documents.
+- `VIBE_INTEGRATION_HOOKS.md` -- How external tools can consume, validate, and act on `.vibe.md` documents.
 - `VIBE_MULTI_AUTHOR.md` -- Patterns for multiple humans or AI agents collaborating on a single document.
-- `VIBE_MCP_SERVER.md` -- Model Context Protocol server for AI tool integration with `.vibe` documents.
+- `VIBE_MCP_SERVER.md` -- Model Context Protocol server for AI tool integration with `.vibe.md` documents.
 
 ---
 

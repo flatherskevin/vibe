@@ -72,7 +72,7 @@ def register_session_tools(mcp: FastMCP) -> None:
             session_id: The session ID in format YYYY-MM-DD-xxxxxx.
 
         Returns:
-            JSON object with session metadata and list of .vibe files.
+            JSON object with session metadata and list of .vibe.md files.
         """
         try:
             result = _manager.get_session(session_id)

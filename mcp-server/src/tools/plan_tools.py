@@ -1,8 +1,8 @@
 """MCP tool registrations for plan read/write operations.
 
 Registers 2 tools: write_plan, read_plan.
-write_plan validates YAML and schema (advisory -- still writes on failure).
-read_plan reads, parses YAML, validates schema, returns content + parsed + valid.
+write_plan validates .vibe.md structure and schema (advisory -- still writes on failure).
+read_plan reads, parses .vibe.md, validates schema, returns content + parsed + valid.
 """
 
 import json
@@ -10,16 +10,16 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
 from mcp.server.fastmcp import FastMCP
 
+from ..parsing.vibe_md import parse_vibe_md
 from ..session.manager import SessionManager
 from ..validation.schema import validate_document
 
 logger = logging.getLogger(__name__)
 
 # Error codes
-INVALID_YAML = "INVALID_YAML"
+INVALID_VIBE_MD = "INVALID_VIBE_MD"
 FILE_NOT_FOUND = "FILE_NOT_FOUND"
 FILESYSTEM_ERROR = "FILESYSTEM_ERROR"
 
@@ -46,46 +46,45 @@ def register_plan_tools(mcp: FastMCP) -> None:
         filename: str,
         content: str,
     ) -> str:
-        """Write a .vibe plan file to a session directory.
+        """Write a .vibe.md plan file to a session directory.
 
-        Validates YAML syntax and schema compliance (advisory). The file is
-        written regardless of validation outcome, but validation results are
+        Validates .vibe.md structure and schema compliance (advisory). The file
+        is written regardless of validation outcome, but validation results are
         returned so the caller can address issues.
 
         Args:
             session_id: The session ID to write the plan into.
-            filename: Name of the .vibe file (e.g. 'architecture.vibe').
-            content: The full YAML content of the .vibe file.
+            filename: Name of the .vibe.md file (e.g. 'architecture.vibe.md').
+            content: The full .vibe.md content (YAML frontmatter + markdown body).
 
         Returns:
-            JSON object with write status, yaml_valid, schema_valid, and any errors.
+            JSON object with write status, parse_valid, schema_valid, and any errors.
         """
         result: dict = {
             "session_id": session_id,
             "filename": filename,
             "written": False,
-            "yaml_valid": False,
+            "parse_valid": False,
             "schema_valid": False,
-            "yaml_errors": [],
+            "parse_errors": [],
             "schema_errors": [],
         }
 
-        # Validate YAML
+        # Parse .vibe.md
         parsed = None
         try:
-            parsed = yaml.safe_load(content)
-            if isinstance(parsed, dict):
-                result["yaml_valid"] = True
+            parsed = parse_vibe_md(content)
+            if isinstance(parsed, dict) and "vibe" in parsed:
+                result["parse_valid"] = True
             else:
-                result["yaml_errors"].append(
-                    f"{INVALID_YAML}: Parsed content is not a YAML mapping "
-                    f"(got {type(parsed).__name__})"
+                result["parse_errors"].append(
+                    f"{INVALID_VIBE_MD}: Parsed content is missing required 'vibe' field"
                 )
-        except yaml.YAMLError as exc:
-            result["yaml_errors"].append(f"{INVALID_YAML}: {exc}")
+        except Exception as exc:
+            result["parse_errors"].append(f"{INVALID_VIBE_MD}: {exc}")
 
-        # Validate schema if YAML parsed to a dict
-        if isinstance(parsed, dict):
+        # Validate schema if parsed successfully
+        if isinstance(parsed, dict) and "vibe" in parsed:
             is_valid, schema_errors = validate_document(parsed)
             result["schema_valid"] = is_valid
             result["schema_errors"] = schema_errors
@@ -109,27 +108,27 @@ def register_plan_tools(mcp: FastMCP) -> None:
         session_id: str,
         filename: str,
     ) -> str:
-        """Read a .vibe plan file from a session directory.
+        """Read a .vibe.md plan file from a session directory.
 
-        Reads the raw content, parses YAML, validates against the VIBE v2 schema,
-        and returns all three results.
+        Reads the raw content, parses the .vibe.md format, validates against
+        the VIBE v2 schema, and returns all three results.
 
         Args:
             session_id: The session ID containing the plan.
-            filename: Name of the .vibe file to read.
+            filename: Name of the .vibe.md file to read.
 
         Returns:
-            JSON object with content (raw text), parsed (YAML as JSON), and
-            validation results (yaml_valid, schema_valid, errors).
+            JSON object with content (raw text), parsed (dict as JSON), and
+            validation results (parse_valid, schema_valid, errors).
         """
         result: dict = {
             "session_id": session_id,
             "filename": filename,
             "content": None,
             "parsed": None,
-            "yaml_valid": False,
+            "parse_valid": False,
             "schema_valid": False,
-            "yaml_errors": [],
+            "parse_errors": [],
             "schema_errors": [],
         }
 
@@ -153,23 +152,22 @@ def register_plan_tools(mcp: FastMCP) -> None:
 
         result["content"] = raw_content
 
-        # Parse YAML
+        # Parse .vibe.md
         parsed = None
         try:
-            parsed = yaml.safe_load(raw_content)
-            if isinstance(parsed, dict):
-                result["yaml_valid"] = True
+            parsed = parse_vibe_md(raw_content)
+            if isinstance(parsed, dict) and "vibe" in parsed:
+                result["parse_valid"] = True
                 result["parsed"] = parsed
             else:
-                result["yaml_errors"].append(
-                    f"{INVALID_YAML}: Parsed content is not a YAML mapping "
-                    f"(got {type(parsed).__name__})"
+                result["parse_errors"].append(
+                    f"{INVALID_VIBE_MD}: Parsed content is missing required 'vibe' field"
                 )
-        except yaml.YAMLError as exc:
-            result["yaml_errors"].append(f"{INVALID_YAML}: {exc}")
+        except Exception as exc:
+            result["parse_errors"].append(f"{INVALID_VIBE_MD}: {exc}")
 
         # Validate schema
-        if isinstance(parsed, dict):
+        if isinstance(parsed, dict) and "vibe" in parsed:
             is_valid, schema_errors = validate_document(parsed)
             result["schema_valid"] = is_valid
             result["schema_errors"] = schema_errors

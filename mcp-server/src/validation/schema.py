@@ -106,3 +106,80 @@ def validate_document(data: dict[str, Any]) -> tuple[bool, list[str]]:
         messages.append(f"{SCHEMA_VALIDATION_FAILED}: {path}: {error.message}")
 
     return False, messages
+
+
+def validate_markdown_structure(text: str) -> tuple[bool, list[str]]:
+    """Validate the structural integrity of a .vibe.md document.
+
+    Checks that are specific to the markdown format (beyond what the JSON
+    schema can validate on the parsed dict):
+    - Section IDs are present in <!-- --> comments
+    - Required table columns exist (Path for artifacts, ID for quality)
+    - All IDs are unique across their scope
+    - depends_on references point to existing IDs
+
+    Returns:
+        A tuple of (is_valid, errors).
+    """
+    import re
+
+    errors: list[str] = []
+
+    # Parse to get the structured data
+    from ..parsing.vibe_md import parse_vibe_md
+    data = parse_vibe_md(text)
+
+    # Collect all section IDs and decision IDs for reference checking
+    section_ids: list[str] = []
+    decision_ids: list[str] = []
+    quality_ids: list[str] = []
+    artifact_paths: list[str] = []
+
+    # Check sections
+    for i, s in enumerate(data.get("sections", [])):
+        sid = s.get("id")
+        if not sid:
+            title = s.get("title", f"index {i}")
+            errors.append(f"Section '{title}' is missing an id in its <!-- --> comment")
+        else:
+            if sid in section_ids:
+                errors.append(f"Duplicate section id: {sid}")
+            section_ids.append(sid)
+
+    # Check decisions
+    for i, d in enumerate(data.get("decisions", [])):
+        did = d.get("id")
+        if not did:
+            title = d.get("title", f"index {i}")
+            errors.append(f"Decision '{title}' is missing an id in its <!-- --> comment")
+        else:
+            if did in decision_ids:
+                errors.append(f"Duplicate decision id: {did}")
+            decision_ids.append(did)
+
+    # Check quality
+    for i, q in enumerate(data.get("quality", [])):
+        qid = q.get("id")
+        if qid:
+            if qid in quality_ids:
+                errors.append(f"Duplicate quality id: {qid}")
+            quality_ids.append(qid)
+
+    # Check artifacts
+    for a in data.get("artifacts", []):
+        path = a.get("path")
+        if path:
+            if path in artifact_paths:
+                errors.append(f"Duplicate artifact path: {path}")
+            artifact_paths.append(path)
+
+    # Check depends_on references in sections
+    for s in data.get("sections", []):
+        for dep in s.get("depends_on", []):
+            if dep not in section_ids:
+                errors.append(
+                    f"Section '{s.get('id', '?')}' depends_on '{dep}' "
+                    f"which is not a known section id"
+                )
+
+    return (len(errors) == 0, errors)
